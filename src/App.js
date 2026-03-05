@@ -22,6 +22,7 @@ import GoalsPage from "./pages/GoalsPage";
 import GivingsPage from "./pages/GivingsPage";
 import OthersPage from "./pages/OthersPage";
 import Profile from "./pages/Profile";
+import PublicRoute from "./components/PublicRoute";
 import "./styles/globals.css";
 
 function App() {
@@ -41,8 +42,23 @@ function App() {
             }}
           />
           <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <LoginPage />
+                </PublicRoute>
+              }
+            />
+
+            <Route
+              path="/register"
+              element={
+                <PublicRoute>
+                  <RegisterPage />
+                </PublicRoute>
+              }
+            />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route
               path="/*"

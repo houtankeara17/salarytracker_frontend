@@ -9,8 +9,8 @@ import { formatDate } from "../utils/khmerUtils";
 
 const CATEGORIES = [
   "food",
-  "drink",
-  "fruit",
+  "Drink",
+  "Fruit",
   "transport",
   "clothing",
   "health",

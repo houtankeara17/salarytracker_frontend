@@ -7,16 +7,20 @@ import CalendarModal from "../components/modals/CalendarModal";
 import ExpenseModal from "../components/modals/ExpenseModal";
 import { formatDate } from "../utils/khmerUtils";
 
+/* ─────────────────────────────────────────────────────
+   Constants
+───────────────────────────────────────────────────── */
 const STATUS_BADGE = {
   planned: "badge-planned",
   ongoing: "badge-ongoing",
   completed: "badge-completed",
   cancelled: "badge-cancelled",
 };
+
 const CATEGORY_COLORS = {
   food: "#f97316",
-  coffee: "#92400e",
-  water: "#0ea5e9",
+  drink: "#fb923c",
+  fruit: "#0ea5e9",
   transport: "#8b5cf6",
   clothing: "#ec4899",
   health: "#ef4444",
@@ -27,7 +31,6 @@ const CATEGORY_COLORS = {
   other: "#94a3b8",
 };
 
-// Month names in English and Khmer
 const MONTH_NAMES_EN = [
   "Jan",
   "Feb",
@@ -57,141 +60,121 @@ const MONTH_NAMES_KH = [
   "ធ្នូ",
 ];
 
-function MonthYearNav({ month, year, onPrev, onNext, language }) {
-  const monthLabel =
-    language === "kh" ? MONTH_NAMES_KH[month] : MONTH_NAMES_EN[month];
-
+/* ─────────────────────────────────────────────────────
+   Shared micro-components
+───────────────────────────────────────────────────── */
+function Chip({ children, color = "#6366f1" }) {
   return (
-    <div className="flex items-center gap-1">
+    <span className="dash-chip" style={{ "--chip-color": color }}>
+      {children}
+    </span>
+  );
+}
+
+function Bar({ pct, color = "#6366f1", height = 5, glow = false }) {
+  return (
+    <div className="dash-bar-track" style={{ "--bar-h": `${height}px` }}>
+      <div
+        className="dash-bar-fill"
+        style={{
+          width: `${Math.min(100, Math.max(0, pct))}%`,
+          background: `linear-gradient(90deg, ${color}cc, ${color})`,
+          boxShadow: glow ? `0 0 10px ${color}60` : "none",
+        }}
+      />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────
+   MonthYearNav
+───────────────────────────────────────────────────── */
+function MonthYearNav({ month, year, onPrev, onNext, language }) {
+  const label =
+    language === "kh" ? MONTH_NAMES_KH[month] : MONTH_NAMES_EN[month];
+  return (
+    <div className="dash-nav">
       <button
+        className="dash-nav-btn"
         onClick={onPrev}
         aria-label="Previous month"
-        style={{
-          background: "var(--bg-primary)",
-          border: "1px solid var(--border)",
-          borderRadius: "8px",
-          padding: "3px 9px",
-          cursor: "pointer",
-          color: "var(--text-secondary)",
-          fontWeight: "bold",
-          fontSize: "14px",
-          lineHeight: 1,
-          transition: "background 0.15s, color 0.15s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = "var(--accent, #0ea5e9)";
-          e.currentTarget.style.color = "#fff";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "var(--bg-primary)";
-          e.currentTarget.style.color = "var(--text-secondary)";
-        }}
       >
         ‹
       </button>
-
-      <div
-        style={{
-          minWidth: "108px",
-          textAlign: "center",
-          fontWeight: "700",
-          fontSize: "13px",
-          color: "var(--text-primary)",
-          background: "var(--bg-primary)",
-          border: "1px solid var(--border)",
-          borderRadius: "8px",
-          padding: "3px 10px",
-          userSelect: "none",
-        }}
-      >
-        {monthLabel} {year}
+      <div className="dash-nav-label">
+        {label} {year}
       </div>
-
-      <button
-        onClick={onNext}
-        aria-label="Next month"
-        style={{
-          background: "var(--bg-primary)",
-          border: "1px solid var(--border)",
-          borderRadius: "8px",
-          padding: "3px 9px",
-          cursor: "pointer",
-          color: "var(--text-secondary)",
-          fontWeight: "bold",
-          fontSize: "14px",
-          lineHeight: 1,
-          transition: "background 0.15s, color 0.15s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = "var(--accent, #0ea5e9)";
-          e.currentTarget.style.color = "#fff";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "var(--bg-primary)";
-          e.currentTarget.style.color = "var(--text-secondary)";
-        }}
-      >
+      <button className="dash-nav-btn" onClick={onNext} aria-label="Next month">
         ›
       </button>
     </div>
   );
 }
 
-function PlanCard({ item, icon, t, formatAmount, language }) {
-  const progressField =
+/* ─────────────────────────────────────────────────────
+   PlanCard
+───────────────────────────────────────────────────── */
+function PlanCard({ item, icon, t, formatAmount }) {
+  const saved =
     item.savedAmount !== undefined
       ? item.savedAmount
       : item.givenAmount !== undefined
         ? item.givenAmount
         : item.paidAmount || 0;
-  const progress =
+  const pct =
     item.targetAmount > 0
-      ? Math.min(100, (progressField / item.targetAmount) * 100)
+      ? Math.min(100, (saved / item.targetAmount) * 100)
       : 0;
+  const isDone = item.status === "completed";
+  const clr = isDone ? "#10b981" : "#6366f1";
+
   return (
-    <div
-      className="p-3 rounded-xl"
-      style={{
-        background: "var(--bg-primary)",
-        border: "1px solid var(--border)",
-      }}
-    >
-      <div className="flex items-start gap-2 mb-2">
-        <span className="text-base shrink-0">{icon}</span>
-        <div className="flex-1 min-w-0">
-          <div
-            className="font-semibold text-xs truncate"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {item.title}
-          </div>
+    <div className={`dash-plan-card${isDone ? " is-done" : ""}`}>
+      <div className="dash-plan-top">
+        <span className="dash-plan-icon">{icon}</span>
+        <div className="dash-plan-info">
+          <div className="dash-plan-title">{item.title}</div>
           <span
-            className={`badge ${STATUS_BADGE[item.status] || "badge-planned"} mt-0.5`}
+            className={`badge ${STATUS_BADGE[item.status] || "badge-planned"}`}
             style={{ fontSize: "9px" }}
           >
             {t(item.status)}
           </span>
         </div>
-        <div
-          className="text-xs font-bold shrink-0"
-          style={{ color: "#0ea5e9" }}
-        >
+        <div className="dash-plan-amount" style={{ color: clr }}>
           {formatAmount(item.amountUSD)}
         </div>
       </div>
-      <div className="progress-bar">
-        <div className="progress-fill" style={{ width: `${progress}%` }} />
-      </div>
-      <div
-        className="text-xs mt-1 text-right"
-        style={{ color: "var(--text-secondary)" }}
-      >
-        {progress.toFixed(0)}%
+      <Bar pct={pct} color={clr} glow={isDone} />
+      <div className="dash-plan-foot">
+        <span>{saved ? formatAmount(saved) : "—"} saved</span>
+        <span style={{ color: clr, fontWeight: 700 }}>{pct.toFixed(0)}%</span>
       </div>
     </div>
   );
 }
 
+/* ─────────────────────────────────────────────────────
+   StatPill
+───────────────────────────────────────────────────── */
+function StatPill({ icon, label, total, completed }) {
+  const pct = total > 0 ? (completed / total) * 100 : 0;
+  return (
+    <div className="dash-stat-pill">
+      <div className="dash-stp-icon">{icon}</div>
+      <div className="dash-stp-total">{total}</div>
+      <div className="dash-stp-label">{label}</div>
+      <Bar pct={pct} color="#10b981" height={3} />
+      <div className="dash-stp-done">
+        {completed}/{total}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────
+   Dashboard
+───────────────────────────────────────────────────── */
 export default function Dashboard() {
   const { t, formatAmount, formatNum, language } = useApp();
   const { user } = useAuth();
@@ -200,40 +183,33 @@ export default function Dashboard() {
   const [calModal, setCalModal] = useState({ open: false, view: "monthly" });
   const [addExpense, setAddExpense] = useState(false);
 
-  // Month/Year navigation state – default to current month/year
   const today = new Date();
-  const [navMonth, setNavMonth] = useState(today.getMonth()); // 0-indexed
+  const [navMonth, setNavMonth] = useState(today.getMonth());
   const [navYear, setNavYear] = useState(today.getFullYear());
 
-  // True when the nav is pointing at the current month (for data refresh cue)
   const isCurrentMonth =
     navMonth === today.getMonth() && navYear === today.getFullYear();
 
-  const handlePrevMonth = () => {
-    setNavMonth((prev) => {
-      if (prev === 0) {
+  const handlePrevMonth = () =>
+    setNavMonth((p) => {
+      if (p === 0) {
         setNavYear((y) => y - 1);
         return 11;
       }
-      return prev - 1;
+      return p - 1;
     });
-  };
-
-  const handleNextMonth = () => {
-    setNavMonth((prev) => {
-      if (prev === 11) {
+  const handleNextMonth = () =>
+    setNavMonth((p) => {
+      if (p === 11) {
         setNavYear((y) => y + 1);
         return 0;
       }
-      return prev + 1;
+      return p + 1;
     });
-  };
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // Pass month (1-indexed) and year so the API can return data for that period.
-      // Falls back gracefully if the API doesn't support these params yet.
       const res = await dashboardAPI.getSummary({
         month: navMonth + 1,
         year: navYear,
@@ -250,22 +226,52 @@ export default function Dashboard() {
     loadData();
   }, [loadData]);
 
+  /* ── Skeleton ── */
   if (loading)
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="dash-skeleton-wrap">
+        <div
+          className="skeleton"
+          style={{ height: "48px", width: "220px", borderRadius: "12px" }}
+        />
+        <div
+          className="skeleton"
+          style={{ height: "180px", borderRadius: "20px" }}
+        />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4,1fr)",
+            gap: "14px",
+          }}
+        >
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="skeleton h-32 rounded-2xl" />
+            <div
+              key={i}
+              className="skeleton"
+              style={{ height: "110px", borderRadius: "18px" }}
+            />
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "20px",
+          }}
+        >
           {[1, 2].map((i) => (
-            <div key={i} className="skeleton h-40 rounded-2xl" />
+            <div
+              key={i}
+              className="skeleton"
+              style={{ height: "320px", borderRadius: "20px" }}
+            />
           ))}
         </div>
       </div>
     );
 
+  /* ── Derived ── */
   const stats = data?.stats || {};
   const statCards = [
     {
@@ -298,13 +304,10 @@ export default function Dashboard() {
     },
   ];
 
-  // Detect if the selected month/year is strictly in the future (no data expected)
-  const todayY = today.getFullYear();
-  const todayM = today.getMonth(); // 0-indexed
+  const todayY = today.getFullYear(),
+    todayM = today.getMonth();
   const isFutureMonth =
     navYear > todayY || (navYear === todayY && navMonth > todayM);
-
-  // Treat as empty when it's a future month OR when the API returned no salary record
   const hasData = !isFutureMonth && !!data?.salary;
 
   const salaryUSD = hasData ? data?.salaryUSD || 0 : 0;
@@ -314,6 +317,7 @@ export default function Dashboard() {
   const monthlySpentUSD = hasData ? data?.monthlySpentUSD || 0 : 0;
   const completedDeductionUSD = hasData ? data?.completedDeductionUSD || 0 : 0;
   const plans = hasData ? data?.plans || {} : {};
+
   const spendPercent =
     spendableUSD > 0
       ? Math.min(
@@ -323,49 +327,38 @@ export default function Dashboard() {
       : 0;
   const dailyBudget = spendableUSD / 30;
   const savingPercent = salaryUSD > 0 ? (savingUSD / salaryUSD) * 100 : 0;
+  const spendColor =
+    spendPercent > 90 ? "#ef4444" : spendPercent > 70 ? "#f59e0b" : "#6366f1";
 
   return (
-    <div className="space-y-6 animate-fade-in ">
+    <div className="dash-root">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="dash-header dash-section">
         <div>
-          <h1
-            className="font-display font-bold text-2xl md:text-3xl"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {t("dashboard")}
-          </h1>
-          <p
-            className="text-sm mt-0.5"
-            style={{ color: "var(--text-secondary)" }}
-          >
+          <h1 className="dash-title">{t("dashboard")}</h1>
+          <p className="dash-subtitle">
             {formatDate(new Date(), language, "long")}
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setAddExpense(true)}>
+        <button className="dash-add-btn" onClick={() => setAddExpense(true)}>
           + {t("addNew")}
         </button>
       </div>
 
-      {/* Salary & Budget summary */}
-      <div className="card p-5 font-khmer">
-        {/* ── Month/Year navigation header ── */}
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <div
-            className="font-display font-bold text-base"
-            style={{ color: "var(--text-primary)" }}
-          >
-            💰 {t("totalSalary")}
+      {/* Salary & Budget */}
+      <div
+        className="dash-glass-card dash-section"
+        style={{ animationDelay: ".06s" }}
+      >
+        <div className="dash-card-head">
+          <div>
+            <h2 className="dash-card-title">💰 {t("totalSalary")}</h2>
             {!isCurrentMonth && (
-              <span
-                className="ml-2 text-xs font-normal"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                ({t("viewing") || "Viewing"})
+              <span className="dash-card-subtitle">
+                {t("viewing") || "Viewing selected month"}
               </span>
             )}
           </div>
-
           <MonthYearNav
             month={navMonth}
             year={navYear}
@@ -376,16 +369,9 @@ export default function Dashboard() {
         </div>
 
         {!hasData ? (
-          /* ── Empty state for future / no-data months ── */
-          <div
-            className="flex flex-col items-center justify-center py-8 text-sm"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            <div className="text-4xl mb-3">{isFutureMonth ? "🔮" : "📭"}</div>
-            <div
-              className="font-semibold mb-1"
-              style={{ color: "var(--text-primary)" }}
-            >
+          <div className="dash-empty">
+            <div className="dash-empty-icon">{isFutureMonth ? "🔮" : "📭"}</div>
+            <div className="dash-empty-title">
               {isFutureMonth
                 ? language === "kh"
                   ? "មិនទាន់មានទិន្នន័យ"
@@ -394,7 +380,7 @@ export default function Dashboard() {
                   ? "គ្មានប្រាក់ខែសម្រាប់ខែនេះ"
                   : "No salary set for this month"}
             </div>
-            <div style={{ fontSize: "12px" }}>
+            <div className="dash-empty-sub">
               {isFutureMonth
                 ? language === "kh"
                   ? "ខែនេះនៅមិនទាន់មកដល់ទេ"
@@ -406,7 +392,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 ">
+            <div className="dash-tiles">
               {[
                 {
                   label: t("totalSalary"),
@@ -419,7 +405,7 @@ export default function Dashboard() {
                   icon: "🏦",
                   val: formatAmount(savingUSD),
                   color: "#10b981",
-                  sub: savingPercent.toFixed(0) + "%",
+                  sub: `${savingPercent.toFixed(0)}% of salary`,
                 },
                 {
                   label: t("spendable"),
@@ -436,79 +422,50 @@ export default function Dashboard() {
               ].map((item, i) => (
                 <div
                   key={i}
-                  className="text-center p-3 rounded-xl"
-                  style={{ background: "var(--bg-primary)" }}
+                  className="dash-tile"
+                  style={{ "--tile-color": item.color }}
                 >
-                  <div
-                    className="text-xs font-semibold mb-1"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
+                  <div className="dash-tile-label">
                     {item.icon} {item.label}
                   </div>
-                  <div
-                    className="font-display font-bold text-lg"
-                    style={{ color: item.color }}
-                  >
+                  <div className="dash-tile-val" style={{ color: item.color }}>
                     {item.val}
                   </div>
-                  {item.sub && (
-                    <div
-                      className="text-xs"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      {item.sub}
-                    </div>
-                  )}
+                  {item.sub && <div className="dash-tile-sub">{item.sub}</div>}
                 </div>
               ))}
             </div>
 
-            {/* Budget progress */}
-            <div>
-              <div
-                className="flex justify-between text-xs mb-1.5"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                <span>
-                  {t("expenses")}: {formatAmount(monthlySpentUSD)}
+            <div className="dash-spend-block">
+              <div className="dash-spend-row">
+                <span className="dash-spend-left">
+                  {t("expenses")}:{" "}
+                  <strong>{formatAmount(monthlySpentUSD)}</strong>
+                  {completedDeductionUSD > 0 && (
+                    <span className="dash-spend-deduct">
+                      {" "}
+                      + {t("completedDeduction")}:{" "}
+                      {formatAmount(completedDeductionUSD)}
+                    </span>
+                  )}
                 </span>
-                {completedDeductionUSD > 0 && (
-                  <span>
-                    + {t("completedDeduction")}:{" "}
-                    {formatAmount(completedDeductionUSD)}
-                  </span>
-                )}
-                <span>{formatNum(spendPercent.toFixed(1))}%</span>
+                <span className="dash-spend-pct" style={{ color: spendColor }}>
+                  {formatNum(spendPercent.toFixed(1))}%
+                </span>
               </div>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{
-                    width: `${spendPercent}%`,
-                    background:
-                      spendPercent > 90
-                        ? "linear-gradient(90deg,#ef4444,#dc2626)"
-                        : undefined,
-                  }}
-                />
-              </div>
-              <div
-                className="text-xs mt-1.5 flex justify-between"
-                style={{ color: "var(--text-secondary)" }}
-              >
+              <Bar pct={spendPercent} color={spendColor} height={7} glow />
+              <div className="dash-spend-foot">
                 <span>
-                  {t("daily")} {t("budget")}: {formatAmount(dailyBudget)}/day
+                  {t("daily")} {t("budget")}:{" "}
+                  <strong>{formatAmount(dailyBudget)}/day</strong>
                 </span>
                 <span>
                   {t("remaining")}:{" "}
-                  <span
-                    style={{
-                      color: remainingUSD < 0 ? "#ef4444" : "#10b981",
-                      fontWeight: "bold",
-                    }}
+                  <strong
+                    style={{ color: remainingUSD < 0 ? "#ef4444" : "#10b981" }}
                   >
                     {formatAmount(remainingUSD)}
-                  </span>
+                  </strong>
                 </span>
               </div>
             </div>
@@ -516,40 +473,29 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Stat cards - click to open calendar */}
+      {/* Stat cards */}
       {hasData && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          className="dash-stat-grid dash-section"
+          style={{ animationDelay: ".12s" }}
+        >
           {statCards.map((card) => (
             <div
               key={card.key}
-              className="stat-card"
+              className="dash-stat-card"
+              style={{ "--sc-color": card.color }}
               onClick={() => setCalModal({ open: true, view: card.key })}
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-2xl">{card.icon}</div>
-                <div
-                  className="text-xs font-bold badge"
-                  style={{ background: `${card.color}20`, color: card.color }}
-                >
-                  {t("clickToView")}
-                </div>
+              <div className="dash-sc-decor" />
+              <div className="dash-sc-top">
+                <span className="dash-sc-icon">{card.icon}</span>
+                <Chip color={card.color}>{t("clickToView")}</Chip>
               </div>
-              <div
-                className="font-display font-bold text-2xl md:text-3xl mb-1"
-                style={{ color: "var(--text-primary)" }}
-              >
+              <div className="dash-sc-amount">
                 {formatAmount(card.data?.totalUSD, card.data?.totalKHR)}
               </div>
-              <div
-                className="text-sm font-semibold"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {card.label}
-              </div>
-              <div
-                className="text-xs mt-1"
-                style={{ color: "var(--text-secondary)" }}
-              >
+              <div className="dash-sc-label">{card.label}</div>
+              <div className="dash-sc-count">
                 {formatNum(card.data?.count || 0)} {t("items")}
               </div>
             </div>
@@ -557,89 +503,81 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Plans Overview + Category breakdown */}
+      {/* Plans + Category */}
       {hasData && (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-          {/* Plans overview */}
-          <div className="card p-5">
-            <h2
-              className="font-display font-bold text-lg mb-4"
-              style={{ color: "var(--text-primary)" }}
-            >
-              📋 {t("plansOverview")}
-            </h2>
-            {/* Plan type stats */}
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {[
-                { icon: "✈️", label: t("trips"), stats: plans.stats?.trips },
-                { icon: "🎯", label: t("goals"), stats: plans.stats?.goals },
-                {
-                  icon: "🤝",
-                  label: t("givings"),
-                  stats: plans.stats?.givings,
-                },
-                { icon: "📦", label: t("others"), stats: plans.stats?.others },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="text-center p-2 rounded-xl"
-                  style={{ background: "var(--bg-primary)" }}
-                >
-                  <div className="text-xl mb-1">{item.icon}</div>
-                  <div
-                    className="text-xs font-bold"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {formatNum(item.stats?.total || 0)}
-                  </div>
-                  <div className="text-xs" style={{ color: "#10b981" }}>
-                    ✓ {formatNum(item.stats?.completed || 0)}
-                  </div>
-                  <div
-                    style={{ fontSize: "10px", color: "var(--text-secondary)" }}
-                  >
-                    {item.label}
-                  </div>
-                </div>
-              ))}
+        <div
+          className="dash-bottom-grid dash-section"
+          style={{ animationDelay: ".18s" }}
+        >
+          {/* Plans Overview */}
+          <div className="dash-glass-card">
+            <div className="dash-card-head">
+              <div>
+                <h2 className="dash-card-title">📋 {t("plansOverview")}</h2>
+                <p className="dash-card-subtitle">
+                  Active &amp; completed targets
+                </p>
+              </div>
+              <Chip color="#6366f1">
+                {(plans.stats?.trips?.total || 0) +
+                  (plans.stats?.goals?.total || 0) +
+                  (plans.stats?.givings?.total || 0) +
+                  (plans.stats?.others?.total || 0)}{" "}
+                plans
+              </Chip>
             </div>
 
-            {/* Completed this month banner */}
+            <div className="dash-pillrow">
+              <StatPill
+                icon="✈️"
+                label={t("trips")}
+                total={plans.stats?.trips?.total || 0}
+                completed={plans.stats?.trips?.completed || 0}
+              />
+              <StatPill
+                icon="🎯"
+                label={t("goals")}
+                total={plans.stats?.goals?.total || 0}
+                completed={plans.stats?.goals?.completed || 0}
+              />
+              <StatPill
+                icon="🤝"
+                label={t("givings")}
+                total={plans.stats?.givings?.total || 0}
+                completed={plans.stats?.givings?.completed || 0}
+              />
+              <StatPill
+                icon="📦"
+                label={t("others")}
+                total={plans.stats?.others?.total || 0}
+                completed={plans.stats?.others?.completed || 0}
+              />
+            </div>
+
             {plans.completedThisMonth?.length > 0 && (
-              <div
-                className="rounded-xl p-3 mb-4"
-                style={{
-                  background: "linear-gradient(135deg,#dcfce7,#bbf7d0)",
-                  border: "1px solid #86efac",
-                }}
-              >
-                <div className="text-xs font-bold text-green-800 mb-2">
-                  ✅ {t("completedDeduction")} (
-                  {formatAmount(data?.completedDeductionUSD)})
+              <div className="dash-completed-banner">
+                <div className="dash-cb-head">
+                  <span>✅ {t("completedDeduction")}</span>
+                  <strong>{formatAmount(data?.completedDeductionUSD)}</strong>
                 </div>
-                <div className="space-y-1">
-                  {plans.completedThisMonth.slice(0, 3).map((item) => (
-                    <div
-                      key={item._id}
-                      className="flex justify-between text-xs text-green-700"
-                    >
-                      <span className="truncate mr-2">{item.title}</span>
-                      <span className="font-bold shrink-0">
-                        {formatAmount(item.amountUSD)}
-                      </span>
-                    </div>
-                  ))}
-                  {plans.completedThisMonth.length > 3 && (
-                    <div className="text-xs text-green-600">
-                      +{plans.completedThisMonth.length - 3} more
-                    </div>
-                  )}
-                </div>
+                {plans.completedThisMonth.slice(0, 3).map((item) => (
+                  <div key={item._id} className="dash-cb-row">
+                    <div className="dash-cb-dot" />
+                    <span className="dash-cb-name">{item.title}</span>
+                    <span className="dash-cb-amt">
+                      {formatAmount(item.amountUSD)}
+                    </span>
+                  </div>
+                ))}
+                {plans.completedThisMonth.length > 3 && (
+                  <div className="dash-cb-more">
+                    +{plans.completedThisMonth.length - 3} more
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Recent plans list */}
-            <div className="space-y-3">
+            <div className="dash-plans-list">
               {[
                 { items: plans.recentTrips, icon: "✈️", type: "trips" },
                 { items: plans.recentGoals, icon: "🎯", type: "goals" },
@@ -648,13 +586,10 @@ export default function Dashboard() {
               ].map(({ items, icon, type }) =>
                 items?.length > 0 ? (
                   <div key={type}>
-                    <div
-                      className="text-xs font-bold mb-1.5"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
+                    <div className="dash-plans-section-label">
                       {icon} {t(type)}
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="dash-plans-cards">
                       {items.slice(0, 2).map((item) => (
                         <PlanCard
                           key={item._id}
@@ -673,93 +608,112 @@ export default function Dashboard() {
                 !plans.recentGoals?.length &&
                 !plans.recentGivings?.length &&
                 !plans.recentOthers?.length && (
-                  <div
-                    className="text-center py-6 text-sm"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    <div className="text-3xl mb-2">📋</div>
-                    {t("noPlans")}
+                  <div className="dash-empty">
+                    <div
+                      className="dash-empty-icon"
+                      style={{ fontSize: "32px" }}
+                    >
+                      📋
+                    </div>
+                    <div className="dash-empty-sub">{t("noPlans")}</div>
                   </div>
                 )}
             </div>
           </div>
 
-          {/* Category breakdown */}
-          <div className="card p-5">
-            <h2
-              className="font-display font-bold text-lg mb-4"
-              style={{ color: "var(--text-primary)" }}
-            >
-              📊 {t("monthly")} {t("category")}
-            </h2>
+          {/* Category Breakdown */}
+          <div className="dash-glass-card">
+            <div className="dash-card-head">
+              <div>
+                <h2 className="dash-card-title">
+                  📊 {t("monthly")} {t("category")}
+                </h2>
+                <p className="dash-card-subtitle">Spending by category</p>
+              </div>
+              <span className="dash-cat-total">
+                {formatAmount(monthlySpentUSD)}
+              </span>
+            </div>
+
             {data?.categoryBreakdown?.length > 0 ? (
-              <div className="space-y-3">
-                {data.categoryBreakdown.map((cat) => {
+              <div className="dash-cat-list">
+                {data.categoryBreakdown.map((cat, i) => {
                   const pct =
                     monthlySpentUSD > 0
                       ? (cat.totalUSD / monthlySpentUSD) * 100
                       : 0;
+                  const color = CATEGORY_COLORS[cat._id] || "#94a3b8";
                   return (
-                    <div key={cat._id} className="flex items-center gap-3">
-                      <span className="text-xl w-8 text-center shrink-0">
-                        {cat.emoji}
+                    <div key={cat._id} className="dash-cat-row">
+                      <span className="dash-cat-rank">
+                        {String(i + 1).padStart(2, "0")}
                       </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between text-xs font-semibold mb-1">
-                          <span style={{ color: "var(--text-primary)" }}>
-                            {t(cat._id)}
-                          </span>
-                          <span style={{ color: "var(--text-secondary)" }}>
-                            {formatAmount(cat.totalUSD)} (
-                            {formatNum(pct.toFixed(1))}%)
-                          </span>
-                        </div>
-                        <div className="progress-bar">
-                          <div
-                            className="progress-fill"
-                            style={{
-                              width: `${pct}%`,
-                              background: `linear-gradient(90deg,${CATEGORY_COLORS[cat._id] || "#0ea5e9"},${CATEGORY_COLORS[cat._id] || "#38bdf8"})`,
-                            }}
-                          />
-                        </div>
-                      </div>
                       <div
-                        className="text-xs w-5 text-right shrink-0"
-                        style={{ color: "var(--text-secondary)" }}
+                        className="dash-cat-emoji"
+                        style={{ "--cat-color": color }}
                       >
-                        {formatNum(cat.count)}
+                        {cat.emoji}
+                      </div>
+                      <div className="dash-cat-body">
+                        <div className="dash-cat-meta">
+                          <span className="dash-cat-name">{t(cat._id)}</span>
+                          <span className="dash-cat-amt">
+                            {formatAmount(cat.totalUSD)}
+                          </span>
+                        </div>
+                        <Bar pct={pct} color={color} height={4} />
+                      </div>
+                      <div className="dash-cat-right">
+                        <div className="dash-cat-pct" style={{ color }}>
+                          {pct.toFixed(1)}%
+                        </div>
+                        <div className="dash-cat-txn">{cat.count} txn</div>
                       </div>
                     </div>
                   );
                 })}
+                <div className="dash-cat-footer">
+                  <div>
+                    <div className="dash-cat-footer-label">
+                      TOTAL THIS MONTH
+                    </div>
+                    <div className="dash-cat-footer-sub">
+                      {data.categoryBreakdown.reduce((s, c) => s + c.count, 0)}{" "}
+                      transactions
+                    </div>
+                  </div>
+                  <div className="dash-cat-footer-total">
+                    {formatAmount(monthlySpentUSD)}
+                  </div>
+                </div>
               </div>
             ) : (
-              <div
-                className="flex flex-col items-center justify-center h-48 text-sm"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                <div className="text-4xl mb-3">📊</div>
-                {t("noExpenses")}
+              <div className="dash-empty">
+                <div className="dash-empty-icon">📊</div>
+                <div className="dash-empty-sub">{t("noExpenses")}</div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* No salary hint — only show for current/past months with no salary, not future */}
+      {/* No salary hint */}
       {!hasData && !isFutureMonth && isCurrentMonth && (
-        <div className="card p-8 text-center">
-          <div className="text-4xl mb-3">💡</div>
-          <div
-            className="font-semibold text-lg mb-2"
-            style={{ color: "var(--text-primary)" }}
-          >
+        <div
+          className="dash-glass-card dash-section"
+          style={{
+            textAlign: "center",
+            padding: "40px 24px",
+            animationDelay: ".12s",
+          }}
+        >
+          <div className="dash-empty-icon">💡</div>
+          <div className="dash-empty-title">
             {language === "kh"
               ? "ចាប់ផ្ដើមដោយបន្ថែមប្រាក់ខែ!"
               : "Get started by adding your salary!"}
           </div>
-          <div className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          <div className="dash-empty-sub">
             {language === "kh"
               ? "ចូល Salary និង Savings ដើម្បីបញ្ចូលចំនួន"
               : "Go to Salary and Savings pages to set up your monthly budget"}

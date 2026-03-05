@@ -42,6 +42,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("mt_token");
       delete api.defaults.headers.common["Authorization"];
+      window.location.href = "/login";
     }
 
     const message =
@@ -50,7 +51,6 @@ api.interceptors.response.use(
     return Promise.reject(new Error(message));
   },
 );
-
 // ===============================
 // Salary API
 // ===============================

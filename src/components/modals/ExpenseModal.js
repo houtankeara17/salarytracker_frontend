@@ -7,8 +7,8 @@ import KhmerDateInput from "../KhmerDateInput";
 
 const CATEGORIES = [
   { value: "food", emoji: "🍚" },
-  { value: "drink", emoji: "🥤" },
-  { value: "fruit", emoji: "🍓" },
+  { value: "Drink", emoji: "🥤" },
+  { value: "Fruit", emoji: "🍓" },
   { value: "transport", emoji: "🚗" },
   { value: "clothing", emoji: "👕" },
   { value: "health", emoji: "💊" },
