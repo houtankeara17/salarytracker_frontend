@@ -51,7 +51,7 @@ export default function Layout({ children }) {
         >
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-            style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)" }}
+            style={{ background: "linear-gradient(135deg,#7c3aed,#3b0764)" }}
           >
             💰
           </div>
@@ -107,7 +107,7 @@ export default function Layout({ children }) {
                 <button
                   key={m}
                   onClick={() => setTheme(m)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${theme === m ? "bg-primary-500 text-white" : "btn-secondary"}`}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${theme === m ? "bg-purple-400 text-white" : "btn-secondary"}`}
                 >
                   {m === "light" ? "☀️" : m === "dark" ? "🌙" : "⚙️"}
                 </button>
@@ -125,7 +125,7 @@ export default function Layout({ children }) {
                 <button
                   key={code}
                   onClick={() => setLanguage(code)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${language === code ? "bg-primary-500 text-white" : "btn-secondary"}`}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${language === code ? "bg-purple-400 text-white" : "btn-secondary"}`}
                 >
                   {label}
                 </button>
@@ -143,7 +143,7 @@ export default function Layout({ children }) {
                 <button
                   key={code}
                   onClick={() => setCurrency(code)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${currency === code ? "bg-primary-500 text-white" : "btn-secondary"}`}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${currency === code ? "bg-purple-400 text-white" : "btn-secondary"}`}
                 >
                   {label}
                 </button>
@@ -206,7 +206,7 @@ export default function Layout({ children }) {
                   <div
                     className="w-8 h-8 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
                     style={{
-                      background: "linear-gradient(135deg,#0ea5e9,#0284c7)",
+                      background: "linear-gradient(135deg,#7c3aed,#3b0764)",
                     }}
                   >
                     {user.name?.[0]?.toUpperCase() || "U"}
