@@ -1,9 +1,11 @@
 // src/components/layout/Layout.js
+// ✅ FloatingCalculator added — it persists across ALL pages
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { formatDate } from "../../utils/khmerUtils";
+import FloatingCalculator from "../FloatingCalculator"; // 👈 import
 
 const navItems = [
   { path: "/dashboard", icon: "📊", key: "dashboard" },
@@ -21,7 +23,6 @@ export default function Layout({ children }) {
   const { t, theme, setTheme, language, setLanguage, currency, setCurrency } =
     useApp();
   const { user, logout } = useAuth();
-
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -38,7 +39,9 @@ export default function Layout({ children }) {
 
       {/* ── Sidebar ────────────────────────────────── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
         style={{
           background: "var(--card-bg)",
           borderRight: "1px solid var(--border)",
@@ -107,7 +110,9 @@ export default function Layout({ children }) {
                 <button
                   key={m}
                   onClick={() => setTheme(m)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${theme === m ? "bg-purple-400 text-white" : "btn-secondary"}`}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    theme === m ? "bg-purple-400 text-white" : "btn-secondary"
+                  }`}
                 >
                   {m === "light" ? "☀️" : m === "dark" ? "🌙" : "⚙️"}
                 </button>
@@ -125,7 +130,11 @@ export default function Layout({ children }) {
                 <button
                   key={code}
                   onClick={() => setLanguage(code)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${language === code ? "bg-purple-400 text-white" : "btn-secondary"}`}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    language === code
+                      ? "bg-purple-400 text-white"
+                      : "btn-secondary"
+                  }`}
                 >
                   {label}
                 </button>
@@ -143,7 +152,11 @@ export default function Layout({ children }) {
                 <button
                   key={code}
                   onClick={() => setCurrency(code)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${currency === code ? "bg-purple-400 text-white" : "btn-secondary"}`}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    currency === code
+                      ? "bg-purple-400 text-white"
+                      : "btn-secondary"
+                  }`}
                 >
                   {label}
                 </button>
@@ -195,7 +208,6 @@ export default function Layout({ children }) {
                   border: "1px solid var(--border)",
                 }}
               >
-                {/* Avatar */}
                 {user.avatar ? (
                   <img
                     src={user.avatar}
@@ -212,8 +224,6 @@ export default function Layout({ children }) {
                     {user.name?.[0]?.toUpperCase() || "U"}
                   </div>
                 )}
-
-                {/* Name (hidden on small devices) */}
                 <span
                   className="hidden sm:block text-xs font-semibold truncate max-w-24"
                   style={{ color: "var(--text-primary)" }}
@@ -222,7 +232,6 @@ export default function Layout({ children }) {
                 </span>
               </button>
 
-              {/* Dropdown */}
               {showMenu && (
                 <div
                   className="absolute right-0 mt-2 w-40 rounded-xl shadow-lg p-2 space-y-1 z-50"
@@ -238,7 +247,6 @@ export default function Layout({ children }) {
                   >
                     👤 Profile
                   </NavLink>
-
                   <button
                     onClick={() => {
                       logout();
@@ -256,6 +264,9 @@ export default function Layout({ children }) {
 
         <main className="flex-1 p-4 md:p-6 animate-fade-in">{children}</main>
       </div>
+
+      {/* ── Floating Calculator — persists across ALL pages 🧮 ── */}
+      <FloatingCalculator />
     </div>
   );
 }
