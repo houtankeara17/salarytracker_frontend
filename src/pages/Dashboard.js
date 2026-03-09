@@ -198,6 +198,7 @@ export default function Dashboard() {
       }
       return p - 1;
     });
+
   const handleNextMonth = () =>
     setNavMonth((p) => {
       if (p === 11) {
@@ -214,6 +215,7 @@ export default function Dashboard() {
         month: navMonth + 1,
         year: navYear,
       });
+      console.log("month:", navMonth + 1, "year:", navYear, "data:", res.data);
       setData(res.data);
     } catch (err) {
       console.error(err);
@@ -272,6 +274,15 @@ export default function Dashboard() {
     );
 
   /* ── Derived ── */
+  const todayY = today.getFullYear();
+  const todayM = today.getMonth();
+  const isFutureMonth =
+    navYear > todayY || (navYear === todayY && navMonth > todayM);
+  const hasData =
+    !isFutureMonth &&
+    !!data?.salary &&
+    (data?.monthlySpentUSD > 0 || data?.plans);
+
   const stats = data?.stats || {};
   const statCards = [
     {
@@ -303,12 +314,6 @@ export default function Dashboard() {
       data: stats.yearly,
     },
   ];
-
-  const todayY = today.getFullYear(),
-    todayM = today.getMonth();
-  const isFutureMonth =
-    navYear > todayY || (navYear === todayY && navMonth > todayM);
-  const hasData = !isFutureMonth && !!data?.salary;
 
   const salaryUSD = hasData ? data?.salaryUSD || 0 : 0;
   const savingUSD = hasData ? data?.savingUSD || 0 : 0;
@@ -378,7 +383,7 @@ export default function Dashboard() {
                   : "No data yet"
                 : language === "kh"
                   ? "គ្មានប្រាក់ខែសម្រាប់ខែនេះ"
-                  : "No salary set for this month"}
+                  : "No salary for this month"}
             </div>
             <div className="dash-empty-sub">
               {isFutureMonth
@@ -387,7 +392,7 @@ export default function Dashboard() {
                   : "This month hasn't started yet"
                 : language === "kh"
                   ? "សូមបន្ថែមប្រាក់ខែក្នុងទំព័រ Salary"
-                  : "Add salary on the Salary page"}
+                  : "No salary was set for this month"}
             </div>
           </div>
         ) : (
@@ -693,30 +698,6 @@ export default function Dashboard() {
                 <div className="dash-empty-sub">{t("noExpenses")}</div>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* No salary hint */}
-      {!hasData && !isFutureMonth && isCurrentMonth && (
-        <div
-          className="dash-glass-card dash-section"
-          style={{
-            textAlign: "center",
-            padding: "40px 24px",
-            animationDelay: ".12s",
-          }}
-        >
-          <div className="dash-empty-icon">💡</div>
-          <div className="dash-empty-title">
-            {language === "kh"
-              ? "ចាប់ផ្ដើមដោយបន្ថែមប្រាក់ខែ!"
-              : "Get started by adding your salary!"}
-          </div>
-          <div className="dash-empty-sub">
-            {language === "kh"
-              ? "ចូល Salary និង Savings ដើម្បីបញ្ចូលចំនួន"
-              : "Go to Salary and Savings pages to set up your monthly budget"}
           </div>
         </div>
       )}
