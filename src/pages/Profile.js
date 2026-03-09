@@ -1,38 +1,59 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useApp } from "../context/AppContext";
 import toast from "react-hot-toast";
 
-export default function LoginPage() {
-  const { login } = useAuth();
-  const { language, setLanguage } = useApp();
-  const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
+export default function Profile() {
+  const { user, updateProfile, changePassword } = useAuth();
+
+  const [name, setName] = useState(user?.name || "");
+  const [avatar, setAvatar] = useState(user?.avatar || "");
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPass, setShowPass] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false); // ✅ added
 
-  const kh = language === "kh";
+  const handleAvatarUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAvatar(reader.result);
+      setAvatarPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.email || !form.password) {
-      toast.error(
-        kh
-          ? "សូមបំពេញអ៊ីម៉ែល និងពាក្យសម្ងាត់"
-          : "Please fill in email and password",
-      );
+  const handleUpdateProfile = async () => {
+    if (!name.trim()) {
+      toast.error("Name is required");
       return;
     }
-    setLoading(true);
     try {
-      await login(form.email, form.password, rememberMe); // ✅ pass rememberMe
-      toast.success(kh ? "ចូលប្រើប្រាស់ដោយជោគជ័យ!" : "Logged in successfully!");
-      navigate("/dashboard");
+      setLoading(true);
+      await updateProfile({ name, avatar });
+      toast.success("Profile updated successfully");
+    } catch {
+      toast.error("Update failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Single handleChangePassword using context method
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      toast.error("Please fill both password fields");
+      return;
+    }
+    try {
+      setLoading(true);
+      await changePassword(currentPassword, newPassword);
+      toast.success("Password changed successfully");
+      setCurrentPassword("");
+      setNewPassword("");
     } catch (err) {
       toast.error(
-        err.message || (kh ? "ព័ត៌មានមិនត្រឹមត្រូវ" : "Invalid credentials"),
+        err?.response?.data?.message || "Current password is incorrect",
       );
     } finally {
       setLoading(false);
@@ -55,22 +76,7 @@ export default function LoginPage() {
         />
       </div>
 
-      <div className="w-full max-w-md animate-slide-up relative">
-        <div className="flex justify-end mb-4 gap-2">
-          {[
-            ["en", "🇺🇸 EN"],
-            ["kh", "🇰🇭 ខ្មែរ"],
-          ].map(([code, label]) => (
-            <button
-              key={code}
-              onClick={() => setLanguage(code)}
-              className={`btn py-1.5 px-3 text-xs ${language === code ? "btn-primary" : "btn-secondary"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
+      <div className="w-full max-w-xl animate-slide-up relative">
         <div className="card p-8">
           <div className="text-center mb-8">
             <div
@@ -80,109 +86,89 @@ export default function LoginPage() {
                 boxShadow: "0 8px 24px rgba(14,165,233,0.3)",
               }}
             >
-              💰
+              👤
             </div>
             <h1
               className="font-display font-bold text-2xl"
               style={{ color: "var(--text-primary)" }}
             >
-              MoneyTrack
+              Profile Settings
             </h1>
             <p
               className="text-sm mt-1"
               style={{ color: "var(--text-secondary)" }}
             >
-              {kh ? "ចូលប្រើប្រាស់គណនីរបស់អ្នក" : "Sign in to your account"}
+              Manage your personal information
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="form-label">{kh ? "អ៊ីម៉ែល" : "Email"}</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, email: e.target.value }))
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <img
+                src={
+                  avatarPreview || "https://ui-avatars.com/api/?name=" + name
                 }
-                className="form-input"
-                placeholder={kh ? "អ៊ីម៉ែលរបស់អ្នក..." : "your@email.com"}
-                autoComplete="email"
+                alt="avatar"
+                className="w-28 h-28 rounded-full object-cover border-4 border-primary-500 shadow-lg"
               />
-            </div>
-
-            <div>
-              <label className="form-label">
-                {kh ? "ពាក្យសម្ងាត់" : "Password"}
-              </label>
-              <div className="relative">
+              <label className="absolute bottom-0 right-0 bg-primary-600 text-white p-2 rounded-full cursor-pointer hover:bg-primary-700 transition">
+                ✏️
                 <input
-                  type={showPass ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, password: e.target.value }))
-                  }
-                  className="form-input pr-10"
-                  placeholder={kh ? "ពាក្យសម្ងាត់..." : "Password..."}
-                  autoComplete="current-password"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  hidden
                 />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-lg"
-                  onClick={() => setShowPass((v) => !v)}
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {showPass ? "🙈" : "👁️"}
-                </button>
-              </div>
-            </div>
-
-            {/* ✅ Remember Me */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 cursor-pointer rounded"
-                style={{ accentColor: "#0ea5e9" }}
-              />
-              <label
-                htmlFor="rememberMe"
-                className="text-sm cursor-pointer select-none"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {kh ? "ចងចាំខ្ញុំ" : "Remember me"}
               </label>
             </div>
+          </div>
+
+          <div className="mt-6">
+            <label className="form-label">Full Name</label>
+            <input
+              className="form-input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+            />
+          </div>
+
+          <button
+            className="btn btn-primary w-full justify-center py-3 text-base mt-6"
+            onClick={handleUpdateProfile}
+            disabled={loading}
+          >
+            {loading ? "Updating..." : "💾 Update Profile"}
+          </button>
+
+          <div className="border-t pt-8 mt-8 space-y-4">
+            <h3 className="font-semibold text-lg text-center">
+              🔒 Change Password
+            </h3>
+
+            <input
+              type="password"
+              placeholder="Current Password"
+              className="form-input"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+
+            <input
+              type="password"
+              placeholder="New Password"
+              className="form-input"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
 
             <button
-              type="submit"
-              className="btn btn-primary w-full justify-center py-3 text-base"
+              className="btn btn-secondary w-full justify-center py-3 text-base"
+              onClick={handleChangePassword}
               disabled={loading}
             >
-              {loading
-                ? kh
-                  ? "កំពុងចូល..."
-                  : "Signing in..."
-                : kh
-                  ? "ចូលប្រើប្រាស់"
-                  : "Sign In"}
+              {loading ? "Changing..." : "Change Password"}
             </button>
-          </form>
-
-          <div
-            className="mt-6 text-center text-sm"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            {kh ? "មិនទាន់មានគណនី?" : "Don't have an account?"}{" "}
-            <Link
-              to="/register"
-              className="font-bold"
-              style={{ color: "#0ea5e9" }}
-            >
-              {kh ? "ចុះឈ្មោះ" : "Register"}
-            </Link>
           </div>
         </div>
       </div>
