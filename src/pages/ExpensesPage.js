@@ -9,8 +9,8 @@ import { formatDate } from "../utils/khmerUtils";
 
 const CATEGORIES = [
   "food",
-  "drink",
-  "fruit",
+  "Drink",
+  "Fruit",
   "transport",
   "clothing",
   "health",
@@ -34,6 +34,8 @@ const MONTHS_EN = [
   "November",
   "December",
 ];
+
+const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 30, "All"];
 
 // ── View toggle icons ──────────────────────────────────────────────────────────
 const IconTable = () => (
@@ -177,6 +179,10 @@ export default function ExpensesPage() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState("table");
 
+  // ── Pagination state ────────────────────────────────────────────────────────
+  const [pageSize, setPageSize] = useState(10); // number | "All"
+  const [currentPage, setCurrentPage] = useState(1);
+
   const loadExpenses = async () => {
     setLoading(true);
     try {
@@ -199,6 +205,11 @@ export default function ExpensesPage() {
     loadExpenses();
   }, [filterCat, filterMonth, filterYear]);
 
+  // Reset to page 1 whenever filters / search / pageSize change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterCat, filterMonth, filterYear, search, pageSize]);
+
   const handleDelete = async () => {
     setDeleting(true);
     try {
@@ -213,10 +224,47 @@ export default function ExpensesPage() {
     }
   };
 
+  // ── Filtering ───────────────────────────────────────────────────────────────
   const filtered = expenses.filter(
     (e) => !search || e.itemName?.toLowerCase().includes(search.toLowerCase()),
   );
   const totalUSD = filtered.reduce((s, e) => s + (e.amountUSD || 0), 0);
+
+  // ── Pagination logic ────────────────────────────────────────────────────────
+  const isAll = pageSize === "All";
+  const totalItems = filtered.length;
+  const totalPages = isAll ? 1 : Math.max(1, Math.ceil(totalItems / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIdx = isAll ? 0 : (safePage - 1) * pageSize;
+  const endIdx = isAll ? totalItems : Math.min(startIdx + pageSize, totalItems);
+  const paginated = filtered.slice(startIdx, endIdx);
+
+  const goTo = (p) => setCurrentPage(Math.max(1, Math.min(p, totalPages)));
+  const goPrev = () => goTo(safePage - 1);
+  const goNext = () => goTo(safePage + 1);
+
+  // Generate page numbers with ellipsis
+  const getPageNumbers = () => {
+    if (totalPages <= 7)
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages = [];
+    if (safePage <= 4) {
+      pages.push(1, 2, 3, 4, 5, "…", totalPages);
+    } else if (safePage >= totalPages - 3) {
+      pages.push(
+        1,
+        "…",
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      );
+    } else {
+      pages.push(1, "…", safePage - 1, safePage, safePage + 1, "…", totalPages);
+    }
+    return pages;
+  };
 
   // ── Shared action buttons ──────────────────────────────────────────────────
   const ActionBtns = ({ e }) => (
@@ -279,7 +327,7 @@ export default function ExpensesPage() {
           </tr>
         </thead>
         <tbody>
-          {filtered.map((e, idx) => (
+          {paginated.map((e, idx) => (
             <tr
               key={e._id}
               className="transition-colors"
@@ -397,7 +445,7 @@ export default function ExpensesPage() {
   // ── BOX / CARD VIEW ────────────────────────────────────────────────────────
   const BoxView = () => (
     <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {filtered.map((e) => (
+      {paginated.map((e) => (
         <div
           key={e._id}
           className="rounded-xl overflow-hidden transition-all duration-200"
@@ -415,16 +463,13 @@ export default function ExpensesPage() {
             ev.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)";
           }}
         >
-          {/* Accent bar */}
           <div
             style={{
               height: "3px",
               background: "linear-gradient(90deg, #0ea5e9, #38bdf8)",
             }}
           />
-
           <div className="p-4">
-            {/* Top: emoji + category + actions */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{e.categoryEmoji}</span>
@@ -434,8 +479,6 @@ export default function ExpensesPage() {
               </div>
               <ActionBtns e={e} />
             </div>
-
-            {/* Name + note */}
             <div
               className="font-bold text-sm mb-0.5"
               style={{ color: "var(--text-primary)" }}
@@ -450,13 +493,9 @@ export default function ExpensesPage() {
                 {e.noted}
               </div>
             )}
-
-            {/* Divider */}
             <div
               style={{ borderTop: "1px solid var(--border)", margin: "10px 0" }}
             />
-
-            {/* Amount row */}
             <div className="flex items-center justify-between mb-2">
               <span
                 className="text-xs font-medium"
@@ -478,8 +517,6 @@ export default function ExpensesPage() {
                 </div>
               </div>
             </div>
-
-            {/* Footer meta */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1 flex-wrap">
                 <span
@@ -513,7 +550,6 @@ export default function ExpensesPage() {
                 {formatDate(e.date, language, "medium")}
               </span>
             </div>
-
             {e.imageQr && (
               <img
                 src={e.imageQr}
@@ -530,7 +566,7 @@ export default function ExpensesPage() {
   // ── ROW VIEW ───────────────────────────────────────────────────────────────
   const RowView = () => (
     <div style={{ borderTop: "1px solid var(--border)" }}>
-      {filtered.map((e) => (
+      {paginated.map((e) => (
         <div
           key={e._id}
           className="flex items-center gap-4 px-5 py-3.5 transition-colors"
@@ -542,7 +578,6 @@ export default function ExpensesPage() {
             (ev.currentTarget.style.background = "transparent")
           }
         >
-          {/* Left color strip */}
           <div
             style={{
               width: "3px",
@@ -552,13 +587,9 @@ export default function ExpensesPage() {
               flexShrink: 0,
             }}
           />
-
-          {/* Emoji */}
           <span className="text-xl flex-shrink-0 w-8 text-center">
             {e.categoryEmoji}
           </span>
-
-          {/* Name + note */}
           <div className="flex-1 min-w-0">
             <div
               className="font-semibold text-sm"
@@ -575,13 +606,9 @@ export default function ExpensesPage() {
               </div>
             )}
           </div>
-
-          {/* Category */}
           <span className="badge badge-planned text-xs hidden sm:inline-flex flex-shrink-0">
             {t(e.category)}
           </span>
-
-          {/* Payment */}
           <span
             className={`badge text-xs hidden md:inline-flex flex-shrink-0 ${e.paymentMethod === "qr" ? "badge-completed" : "badge-planned"}`}
           >
@@ -594,8 +621,6 @@ export default function ExpensesPage() {
                   : "🔄"}{" "}
             {t(e.paymentMethod)}
           </span>
-
-          {/* Qty */}
           {e.quantity > 1 && (
             <span
               className="text-xs flex-shrink-0 hidden lg:block"
@@ -604,16 +629,12 @@ export default function ExpensesPage() {
               ×{e.quantity}
             </span>
           )}
-
-          {/* Date */}
           <span
             className="text-xs flex-shrink-0 hidden sm:block w-24 text-right"
             style={{ color: "var(--text-secondary)" }}
           >
             {formatDate(e.date, language, "medium")}
           </span>
-
-          {/* Amount */}
           <div className="flex-shrink-0 text-right w-24">
             <div className="font-bold text-sm" style={{ color: "#0ea5e9" }}>
               {formatAmount(e.amountUSD, e.amountKHR)}
@@ -624,8 +645,6 @@ export default function ExpensesPage() {
                 : `$${e.amount}`}
             </div>
           </div>
-
-          {/* Actions */}
           <div className="flex-shrink-0">
             <ActionBtns e={e} />
           </div>
@@ -633,6 +652,207 @@ export default function ExpensesPage() {
       ))}
     </div>
   );
+
+  // ── PAGINATION BAR ─────────────────────────────────────────────────────────
+  const PaginationBar = () => {
+    if (totalItems === 0) return null;
+
+    const rangeStart = isAll ? 1 : startIdx + 1;
+    const rangeEnd = isAll ? totalItems : endIdx;
+
+    return (
+      <div
+        className="flex items-center justify-between flex-wrap gap-3 px-4 py-3"
+        style={{
+          borderTop: "1px solid var(--border)",
+          background: "var(--bg-primary)",
+        }}
+      >
+        {/* Left: showing X–Y of Z + page size selector */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+            Showing{" "}
+            <strong style={{ color: "var(--text-primary)" }}>
+              {rangeStart}–{rangeEnd}
+            </strong>{" "}
+            of{" "}
+            <strong style={{ color: "var(--text-primary)" }}>
+              {totalItems}
+            </strong>
+          </span>
+
+          {/* Per-page selector */}
+          <div className="flex items-center gap-1">
+            <span
+              className="text-xs"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Show:
+            </span>
+            <div
+              className="flex items-center gap-0.5 p-0.5 rounded-lg"
+              style={{
+                background: "var(--bg-secondary)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              {PAGE_SIZE_OPTIONS.map((opt) => {
+                const active = pageSize === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => {
+                      setPageSize(opt);
+                      setCurrentPage(1);
+                    }}
+                    style={{
+                      padding: "3px 9px",
+                      borderRadius: "6px",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: "11px",
+                      fontWeight: active ? "700" : "500",
+                      transition: "all 0.15s ease",
+                      color: active ? "#fff" : "var(--text-secondary)",
+                      background: active
+                        ? "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)"
+                        : "transparent",
+                      boxShadow: active
+                        ? "0 2px 6px rgba(14,165,233,0.3)"
+                        : "none",
+                    }}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Prev / page numbers / Next */}
+        {!isAll && totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            {/* Prev */}
+            <button
+              onClick={goPrev}
+              disabled={safePage === 1}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "5px 10px",
+                borderRadius: "7px",
+                border: "1px solid var(--border)",
+                cursor: safePage === 1 ? "not-allowed" : "pointer",
+                fontSize: "12px",
+                fontWeight: "500",
+                background: "var(--bg-secondary)",
+                color:
+                  safePage === 1
+                    ? "var(--text-secondary)"
+                    : "var(--text-primary)",
+                opacity: safePage === 1 ? 0.4 : 1,
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(ev) => {
+                if (safePage !== 1)
+                  ev.currentTarget.style.borderColor = "#0ea5e9";
+              }}
+              onMouseLeave={(ev) => {
+                ev.currentTarget.style.borderColor = "var(--border)";
+              }}
+            >
+              ← Prev
+            </button>
+
+            {/* Page numbers */}
+            {getPageNumbers().map((p, i) =>
+              p === "…" ? (
+                <span
+                  key={`ellipsis-${i}`}
+                  style={{
+                    padding: "5px 4px",
+                    fontSize: "12px",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => goTo(p)}
+                  style={{
+                    minWidth: "32px",
+                    padding: "5px 8px",
+                    borderRadius: "7px",
+                    border: safePage === p ? "none" : "1px solid var(--border)",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: safePage === p ? "700" : "500",
+                    transition: "all 0.15s ease",
+                    color: safePage === p ? "#fff" : "var(--text-primary)",
+                    background:
+                      safePage === p
+                        ? "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)"
+                        : "var(--bg-secondary)",
+                    boxShadow:
+                      safePage === p
+                        ? "0 2px 8px rgba(14,165,233,0.35)"
+                        : "none",
+                  }}
+                  onMouseEnter={(ev) => {
+                    if (safePage !== p)
+                      ev.currentTarget.style.borderColor = "#0ea5e9";
+                  }}
+                  onMouseLeave={(ev) => {
+                    if (safePage !== p)
+                      ev.currentTarget.style.borderColor = "var(--border)";
+                  }}
+                >
+                  {p}
+                </button>
+              ),
+            )}
+
+            {/* Next */}
+            <button
+              onClick={goNext}
+              disabled={safePage === totalPages}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "5px 10px",
+                borderRadius: "7px",
+                border: "1px solid var(--border)",
+                cursor: safePage === totalPages ? "not-allowed" : "pointer",
+                fontSize: "12px",
+                fontWeight: "500",
+                background: "var(--bg-secondary)",
+                color:
+                  safePage === totalPages
+                    ? "var(--text-secondary)"
+                    : "var(--text-primary)",
+                opacity: safePage === totalPages ? 0.4 : 1,
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(ev) => {
+                if (safePage !== totalPages)
+                  ev.currentTarget.style.borderColor = "#0ea5e9";
+              }}
+              onMouseLeave={(ev) => {
+                ev.currentTarget.style.borderColor = "var(--border)";
+              }}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // ── RENDER ─────────────────────────────────────────────────────────────────
   return (
@@ -731,7 +951,6 @@ export default function ExpensesPage() {
             {formatNum(filtered.length)} {t("items")}
           </span>
 
-          {/* Toggle pill group */}
           <div
             className="flex items-center gap-0.5 p-1 rounded-lg"
             style={{
@@ -797,6 +1016,7 @@ export default function ExpensesPage() {
             {viewMode === "table" && <TableView />}
             {viewMode === "box" && <BoxView />}
             {viewMode === "row" && <RowView />}
+            <PaginationBar />
           </>
         )}
       </div>
