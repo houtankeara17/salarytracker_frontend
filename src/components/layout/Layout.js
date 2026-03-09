@@ -111,7 +111,7 @@ export default function Layout({ children }) {
                   key={m}
                   onClick={() => setTheme(m)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    theme === m ? "bg-purple-400 text-white" : "btn-secondary"
+                    theme === m ? "dash-add-btn text-white" : "btn-secondary"
                   }`}
                 >
                   {m === "light" ? "☀️" : m === "dark" ? "🌙" : "⚙️"}
@@ -132,7 +132,7 @@ export default function Layout({ children }) {
                   onClick={() => setLanguage(code)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     language === code
-                      ? "bg-purple-400 text-white"
+                      ? "dash-add-btn text-white"
                       : "btn-secondary"
                   }`}
                 >
@@ -154,7 +154,7 @@ export default function Layout({ children }) {
                   onClick={() => setCurrency(code)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     currency === code
-                      ? "bg-purple-400 text-white"
+                      ? "dash-add-btn text-white"
                       : "btn-secondary"
                   }`}
                 >
