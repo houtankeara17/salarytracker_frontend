@@ -10,7 +10,8 @@ import axios from "axios";
 const api = axios.create({
   baseURL:
     process.env.REACT_APP_API_URL ||
-    "https://salarytracker-backend.onrender.com/api",
+    // "https://salarytracker-backend.onrender.com/api",
+    "http://localhost:5001/api",
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
@@ -51,6 +52,7 @@ api.interceptors.response.use(
     return Promise.reject(new Error(message));
   },
 );
+
 // ===============================
 // Salary API
 // ===============================
@@ -133,7 +135,8 @@ export const otherAPI = {
 // Dashboard API
 // ===============================
 export const dashboardAPI = {
-  getSummary: () => api.get("/dashboard/summary"),
+  // NEW - passes month/year as query params
+  getSummary: (params) => api.get("/dashboard/summary", { params }),
 };
 
 export default api;
