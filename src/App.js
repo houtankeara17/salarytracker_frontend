@@ -23,6 +23,7 @@ import GivingsPage from "./pages/GivingsPage";
 import OthersPage from "./pages/OthersPage";
 import Profile from "./pages/Profile";
 import PublicRoute from "./components/PublicRoute";
+import NotesPage from "./pages/NotesPage";
 import "./styles/globals.css";
 
 function App() {
@@ -75,6 +76,7 @@ function App() {
                       <Route path="/givings" element={<GivingsPage />} />
                       <Route path="/others" element={<OthersPage />} />
                       <Route path="/profile" element={<Profile />} />
+                      <Route path="/notes" element={<NotesPage />} />
                     </Routes>
                   </Layout>
                 </ProtectedRoute>
