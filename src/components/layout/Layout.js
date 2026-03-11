@@ -16,6 +16,7 @@ const navItems = [
   { path: "/goals", icon: "🎯", key: "goals" },
   { path: "/givings", icon: "🤝", key: "givings" },
   { path: "/others", icon: "📦", key: "others" },
+  { path: "/notes", icon: "📝", key: "notes" },
 ];
 
 export default function Layout({ children }) {
