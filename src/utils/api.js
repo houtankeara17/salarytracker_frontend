@@ -132,6 +132,17 @@ export const otherAPI = {
 };
 
 // ===============================
+// Notes API  ← add this to api.js
+// ===============================
+export const noteAPI = {
+  getAll: () => api.get("/notes"),
+  create: (data) => api.post("/notes", data),
+  update: (id, data) => api.put(`/notes/${id}`, data),
+  delete: (id) => api.delete(`/notes/${id}`),
+  togglePin: (id) => api.patch(`/notes/${id}/pin`),
+};
+
+// ===============================
 // Dashboard API
 // ===============================
 export const dashboardAPI = {
