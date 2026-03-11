@@ -3,64 +3,22 @@ import api from "../utils/api";
 
 // ── Note API ──────────────────────────────────────────────────
 const noteAPI = {
-  getAll: () => api.get("/notes"),
-  create: (data) => api.post("/notes", data),
-  update: (id, data) => api.put(`/notes/${id}`, data),
-  delete: (id) => api.delete(`/notes/${id}`),
-  togglePin: (id) => api.patch(`/notes/${id}/pin`),
+  getAll:    ()         => api.get("/notes"),
+  create:    (data)     => api.post("/notes", data),
+  update:    (id, data) => api.put(`/notes/${id}`, data),
+  delete:    (id)       => api.delete(`/notes/${id}`),
+  togglePin: (id)       => api.patch(`/notes/${id}/pin`),
 };
 
-// ── Color / label system — dark & tactical ────────────────────
-// Keys match backend enum: yellow | blue | green | pink | purple | white
+// ── Color / label system ──────────────────────────────────────
+// Keys MUST match backend enum: yellow | blue | green | pink | purple | white
 const COLOR_MAP = {
-  yellow: {
-    bg: "#111111",
-    border: "#2a2a2a",
-    accent: "#f59e0b",
-    text: "#e5e5e5",
-    tag: "DEFAULT",
-    tagBg: "#f59e0b",
-  },
-  pink: {
-    bg: "#130800",
-    border: "#7c2d12",
-    accent: "#ea580c",
-    text: "#fed7aa",
-    tag: "URGENT",
-    tagBg: "#ea580c",
-  },
-  blue: {
-    bg: "#0a1628",
-    border: "#1e3a5f",
-    accent: "#3b82f6",
-    text: "#bfdbfe",
-    tag: "WORK",
-    tagBg: "#3b82f6",
-  },
-  green: {
-    bg: "#061210",
-    border: "#134e4a",
-    accent: "#10b981",
-    text: "#a7f3d0",
-    tag: "DONE",
-    tagBg: "#10b981",
-  },
-  purple: {
-    bg: "#12101a",
-    border: "#3b1f6b",
-    accent: "#8b5cf6",
-    text: "#ddd6fe",
-    tag: "IDEA",
-    tagBg: "#8b5cf6",
-  },
-  white: {
-    bg: "#130a0a",
-    border: "#7f1d1d",
-    accent: "#ef4444",
-    text: "#fecaca",
-    tag: "RISK",
-    tagBg: "#ef4444",
-  },
+  yellow: { bg: "var(--card-bg)",  border: "var(--border)", accent: "#f59e0b", text: "var(--text-primary)",   tag: "DEFAULT", tagBg: "#f59e0b" },
+  pink:   { bg: "var(--card-bg)",  border: "#7c2d1255",     accent: "#ea580c", text: "var(--text-primary)",   tag: "URGENT",  tagBg: "#ea580c" },
+  blue:   { bg: "var(--card-bg)",  border: "#1e3a5f88",     accent: "#3b82f6", text: "var(--text-primary)",   tag: "WORK",    tagBg: "#3b82f6" },
+  green:  { bg: "var(--card-bg)",  border: "#134e4a88",     accent: "#10b981", text: "var(--text-primary)",   tag: "DONE",    tagBg: "#10b981" },
+  purple: { bg: "var(--card-bg)",  border: "#3b1f6b88",     accent: "#8b5cf6", text: "var(--text-primary)",   tag: "IDEA",    tagBg: "#8b5cf6" },
+  white:  { bg: "var(--card-bg)",  border: "#7f1d1d55",     accent: "#ef4444", text: "var(--text-primary)",   tag: "RISK",    tagBg: "#ef4444" },
 };
 const COLORS = Object.keys(COLOR_MAP);
 
@@ -72,153 +30,118 @@ function timeAgo(dateStr) {
   return `${Math.floor(diff / 86400)}D AGO`;
 }
 
-// ── Grid background ───────────────────────────────────────────
-function Background() {
-  return (
-    <div
-      style={{ position: "fixed", inset: 0, zIndex: 0, background: "#080808" }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `
-          linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)
-        `,
-          backgroundSize: "40px 40px",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: -300,
-          left: -300,
-          width: 700,
-          height: 700,
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 65%)",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: -200,
-          right: -200,
-          width: 500,
-          height: 500,
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 65%)",
-          pointerEvents: "none",
-        }}
-      />
-      <style>{`
-        @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
-        @keyframes dropIn  { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
-        @keyframes slideUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
-        @keyframes spin    { to{transform:rotate(360deg)} }
-        @keyframes toastIn { from{transform:translateX(-50%) translateY(12px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
-        @keyframes blink   { 0%,100%{opacity:1} 50%{opacity:0} }
-        * { box-sizing: border-box; }
-        ::placeholder { color: rgba(255,255,255,0.18) !important; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #0d0d0d; }
-        ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
-        input, textarea, button { font-family: inherit; }
-      `}</style>
-    </div>
-  );
-}
+// ── Inline styles ─────────────────────────────────────────────
+const injectStyles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-// ── Primary / ghost / danger button ──────────────────────────
-function TactBtn({ label, icon, onClick, variant = "ghost", disabled }) {
-  const [h, setH] = useState(false);
-  const s =
-    {
-      primary: {
-        bg: h ? "#d97706" : "#f59e0b",
-        border: "#f59e0b",
-        color: "#000",
-      },
-      ghost: {
-        bg: h ? "rgba(255,255,255,0.06)" : "transparent",
-        border: h ? "#444" : "#2a2a2a",
-        color: h ? "#ccc" : "#666",
-      },
-      danger: {
-        bg: h ? "rgba(239,68,68,0.12)" : "transparent",
-        border: h ? "#ef4444" : "#2a2a2a",
-        color: h ? "#ef4444" : "#666",
-      },
-    }[variant] || {};
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      onMouseEnter={() => setH(true)}
-      onMouseLeave={() => setH(false)}
-      style={{
-        background: s.bg,
-        border: `1px solid ${s.border}`,
-        color: s.color,
-        borderRadius: "4px",
-        padding: label ? "9px 18px" : "8px 10px",
-        fontSize: "12px",
-        fontWeight: 800,
-        fontFamily: "'Barlow Condensed', sans-serif",
-        letterSpacing: "0.12em",
-        textTransform: "uppercase",
-        cursor: disabled ? "not-allowed" : "pointer",
-        display: "flex",
-        alignItems: "center",
-        gap: 7,
-        transition: "all 0.1s",
-        opacity: disabled ? 0.4 : 1,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {icon && <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>}
-      {label}
-    </button>
-  );
-}
+    .notes-page * { box-sizing: border-box; }
 
-// ── Small icon button for cards ───────────────────────────────
-function IconBtn({ icon, title, onClick, danger }) {
-  const [h, setH] = useState(false);
+    .notes-page ::placeholder { color: var(--text-secondary) !important; opacity: 0.5; }
+
+    @keyframes notes-dropIn  { from{transform:translateY(-8px);opacity:0} to{transform:translateY(0);opacity:1} }
+    @keyframes notes-slideUp { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
+    @keyframes notes-fadeIn  { from{opacity:0} to{opacity:1} }
+    @keyframes notes-spin    { to{transform:rotate(360deg)} }
+    @keyframes notes-blink   { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes notes-toastIn { from{transform:translateX(-50%) translateY(10px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+
+    .note-card {
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      break-inside: avoid;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      border-left-width: 3px;
+      background: var(--card-bg);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .note-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .tact-btn {
+      border-radius: 6px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.12s;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .tact-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .notes-input {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      padding: 10px 12px;
+      transition: border-color 0.12s;
+      box-sizing: border-box;
+    }
+
+    .filter-chip {
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+    }
+    .filter-chip:hover { background: var(--bg-primary); color: var(--text-primary); }
+    .filter-chip.active { background: var(--bg-primary); }
+
+    .icon-btn {
+      width: 26px; height: 26px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.1s;
+      background: transparent;
+      color: var(--text-secondary);
+    }
+    .icon-btn:hover { border-color: currentColor; }
+    .icon-btn.danger:hover { color: #ef4444; }
+    .icon-btn.pin:hover    { color: #f59e0b; }
+    .icon-btn.edit:hover   { color: var(--text-primary); }
+  `}</style>
+);
+
+// ── Tag badge ─────────────────────────────────────────────────
+function TagBadge({ tag, color }) {
   return (
-    <button
-      title={title}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      onMouseEnter={() => setH(true)}
-      onMouseLeave={() => setH(false)}
-      style={{
-        background: h
-          ? danger
-            ? "rgba(239,68,68,0.1)"
-            : "rgba(245,158,11,0.08)"
-          : "transparent",
-        border: `1px solid ${h ? (danger ? "#ef444488" : "#f59e0b88") : "transparent"}`,
-        borderRadius: "3px",
-        width: 26,
-        height: 26,
-        cursor: "pointer",
-        fontSize: "12px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        transition: "all 0.1s",
-        color: h ? (danger ? "#ef4444" : "#f59e0b") : "#444",
-      }}
-    >
-      {icon}
-    </button>
+    <span style={{
+      background: color, color: "#000",
+      fontSize: "9px", fontWeight: 800,
+      fontFamily: "'Barlow Condensed', sans-serif",
+      letterSpacing: "0.14em", padding: "2px 8px",
+      borderRadius: "3px", flexShrink: 0,
+    }}>{tag}</span>
   );
 }
 
@@ -230,159 +153,83 @@ function NoteCard({ note, onEdit, onDelete, onPin, index }) {
 
   return (
     <div
+      className="note-card"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onClick={() => onEdit(note)}
       style={{
-        background: c.bg,
-        border: `1px solid ${hover ? c.accent + "88" : c.border}`,
-        borderLeft: `3px solid ${note.pinned ? c.accent : hover ? c.accent + "88" : c.border}`,
-        borderRadius: "6px",
-        padding: "16px",
-        position: "relative",
-        cursor: "pointer",
-        transition: "all 0.1s ease",
-        transform: leaving ? "scale(0.95) translateX(6px)" : "scale(1)",
+        borderLeftColor: note.pinned ? c.accent : hover ? c.accent : "var(--border)",
+        borderColor: hover ? `${c.accent}55` : "var(--border)",
+        borderLeftColor: note.pinned ? c.accent : hover ? `${c.accent}88` : c.border,
         opacity: leaving ? 0 : 1,
-        boxShadow: hover
-          ? `0 0 0 1px ${c.accent}18, 0 8px 28px rgba(0,0,0,0.5)`
-          : "0 2px 8px rgba(0,0,0,0.35)",
-        breakInside: "avoid",
-        marginBottom: "10px",
-        animation: `dropIn 0.18s ease ${Math.min(index * 0.035, 0.3)}s both`,
+        transform: leaving ? "scale(0.96) translateX(4px)" : hover ? "translateY(-2px)" : "none",
+        animation: `notes-dropIn 0.18s ease ${Math.min(index * 0.04, 0.28)}s both`,
       }}
     >
-      {/* Tag + actions row */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 10,
-        }}
-      >
-        <span
-          style={{
-            background: c.tagBg,
-            color: "#000",
-            fontSize: "9px",
-            fontWeight: 800,
-            fontFamily: "'Barlow Condensed', sans-serif",
-            letterSpacing: "0.14em",
-            padding: "2px 8px",
-            borderRadius: "2px",
-          }}
-        >
-          {c.tag}
-        </span>
-
+      {/* Tag + actions */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <TagBadge tag={c.tag} color={c.tagBg} />
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {note.pinned && (
-            <span
-              style={{
-                color: c.accent,
-                fontSize: "9px",
-                fontWeight: 700,
-                fontFamily: "'JetBrains Mono', monospace",
-                letterSpacing: "0.1em",
-              }}
-            >
-              ◆ PINNED
-            </span>
+            <span style={{
+              color: c.accent, fontSize: "9px", fontWeight: 700,
+              fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em",
+            }}>◆ PINNED</span>
           )}
-          <div
-            style={{
-              display: "flex",
-              gap: 2,
-              opacity: hover ? 1 : 0,
-              transition: "opacity 0.1s",
-            }}
-          >
-            <IconBtn
-              icon={note.pinned ? "◇" : "◆"}
-              title={note.pinned ? "Unpin" : "Pin"}
-              onClick={() => onPin(note)}
-            />
-            <IconBtn icon="✎" title="Edit" onClick={() => onEdit(note)} />
-            <IconBtn
-              icon="✕"
-              title="Delete"
-              onClick={() => {
+          <div style={{ display: "flex", gap: 2, opacity: hover ? 1 : 0, transition: "opacity 0.12s" }}>
+            <button className={`icon-btn pin`} title={note.pinned ? "Unpin" : "Pin"}
+              onClick={e => { e.stopPropagation(); onPin(note); }}
+              style={{ color: note.pinned ? c.accent : undefined }}
+            >{note.pinned ? "◇" : "◆"}</button>
+            <button className="icon-btn edit" title="Edit"
+              onClick={e => { e.stopPropagation(); onEdit(note); }}
+            >✎</button>
+            <button className="icon-btn danger" title="Delete"
+              onClick={e => {
+                e.stopPropagation();
                 setLeaving(true);
-                setTimeout(() => onDelete(note._id), 220);
+                setTimeout(() => onDelete(note._id), 200);
               }}
-              danger
-            />
+            >✕</button>
           </div>
         </div>
       </div>
 
       {/* Title */}
       {note.title && (
-        <div
-          style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontWeight: 700,
-            fontSize: "18px",
-            color: "#f5f5f5",
-            marginBottom: 6,
-            lineHeight: 1.15,
-            letterSpacing: "0.02em",
-            textTransform: "uppercase",
-          }}
-        >
-          {note.title}
-        </div>
+        <div style={{
+          fontFamily: "'Barlow Condensed', sans-serif",
+          fontWeight: 700, fontSize: "17px",
+          color: "var(--text-primary)",
+          marginBottom: 6, lineHeight: 1.2,
+          letterSpacing: "0.02em", textTransform: "uppercase",
+        }}>{note.title}</div>
       )}
 
       {/* Body */}
-      <div
-        style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "12px",
-          color: c.text,
-          lineHeight: 1.7,
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          opacity: 0.7,
-          maxHeight: "135px",
-          overflow: "hidden",
-        }}
-      >
-        {note.content}
-      </div>
+      <div style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: "12px", color: "var(--text-secondary)",
+        lineHeight: 1.7, whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+        maxHeight: "130px", overflow: "hidden",
+      }}>{note.content}</div>
 
       {/* Footer */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginTop: 12,
-          paddingTop: 10,
-          borderTop: `1px solid ${c.border}`,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono',monospace",
-            fontSize: "10px",
-            color: "#383838",
-            letterSpacing: "0.06em",
-          }}
-        >
-          {timeAgo(note.updatedAt)}
-        </span>
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono',monospace",
-            fontSize: "10px",
-            color: c.accent,
-            opacity: 0.5,
-          }}
-        >
-          #{note._id?.slice(-4).toUpperCase()}
-        </span>
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        marginTop: 12, paddingTop: 10,
+        borderTop: "1px solid var(--border)",
+      }}>
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "10px", color: "var(--text-secondary)",
+          opacity: 0.6, letterSpacing: "0.05em",
+        }}>{timeAgo(note.updatedAt)}</span>
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "10px", color: c.accent, opacity: 0.55,
+        }}>#{note._id?.slice(-4).toUpperCase()}</span>
       </div>
     </div>
   );
@@ -390,24 +237,18 @@ function NoteCard({ note, onEdit, onDelete, onPin, index }) {
 
 // ── Modal ─────────────────────────────────────────────────────
 function NoteModal({ note, onClose, onSave }) {
-  const [title, setTitle] = useState(note?.title || "");
+  const [title,   setTitle]   = useState(note?.title   || "");
   const [content, setContent] = useState(note?.content || "");
-  const [color, setColor] = useState(note?.color || "yellow");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [color,   setColor]   = useState(note?.color   || "yellow");
+  const [saving,  setSaving]  = useState(false);
+  const [error,   setError]   = useState("");
   const contentRef = useRef();
 
-  useEffect(() => {
-    setTimeout(() => contentRef.current?.focus(), 80);
-  }, []);
+  useEffect(() => { setTimeout(() => contentRef.current?.focus(), 80); }, []);
 
   const handleSave = async () => {
-    if (!content.trim()) {
-      setError("// content cannot be empty");
-      return;
-    }
-    setSaving(true);
-    setError("");
+    if (!content.trim()) { setError("// content cannot be empty"); return; }
+    setSaving(true); setError("");
     try {
       await onSave({ title: title.trim(), content: content.trim(), color });
       onClose();
@@ -419,178 +260,93 @@ function NoteModal({ note, onClose, onSave }) {
 
   const c = COLOR_MAP[color];
 
-  const fieldStyle = {
-    width: "100%",
-    background: "#0a0a0a",
-    border: "1px solid #222",
-    borderRadius: "4px",
-    color: "#e5e5e5",
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: "13px",
-    outline: "none",
-    padding: "10px 12px",
-    transition: "border-color 0.1s",
-    boxSizing: "border-box",
-  };
-
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background: "rgba(0,0,0,0.88)",
-        backdropFilter: "blur(3px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        animation: "fadeIn 0.15s ease",
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#0d0d0d",
-          border: `1px solid ${c.accent}44`,
-          borderTop: `2px solid ${c.accent}`,
-          borderRadius: "8px",
-          padding: "28px",
-          width: "min(560px, 94vw)",
-          boxShadow: `0 0 80px rgba(0,0,0,0.9), 0 0 0 1px #181818`,
-          animation: "slideUp 0.18s ease",
-        }}
-      >
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, zIndex: 1000,
+      background: "rgba(0,0,0,0.6)",
+      backdropFilter: "blur(4px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      animation: "notes-fadeIn 0.15s ease",
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: "var(--card-bg)",
+        border: `1px solid var(--border)`,
+        borderTop: `3px solid ${c.accent}`,
+        borderRadius: "10px", padding: "28px",
+        width: "min(560px, 94vw)",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
+        animation: "notes-slideUp 0.2s ease",
+      }}>
+
         {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: 20,
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
-            <div
-              style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: "22px",
-                fontWeight: 900,
-                color: "#fff",
-                letterSpacing: "0.05em",
-                textTransform: "uppercase",
-              }}
-            >
-              {note ? "// EDIT NOTE" : "// NEW NOTE"}
-            </div>
-            <div
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "10px",
-                color: "#383838",
-                marginTop: 3,
-              }}
-            >
-              ctrl+enter to save · esc to close
-            </div>
+            <div style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: "20px", fontWeight: 900,
+              color: "var(--text-primary)", letterSpacing: "0.05em",
+              textTransform: "uppercase",
+            }}>{note ? "// EDIT NOTE" : "// NEW NOTE"}</div>
+            <div style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: "10px", color: "var(--text-secondary)",
+              opacity: 0.5, marginTop: 2,
+            }}>ctrl+enter to save · esc to close</div>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "transparent",
-              border: "1px solid #222",
-              color: "#444",
-              fontSize: "12px",
-              cursor: "pointer",
-              borderRadius: "3px",
-              width: 26,
-              height: 26,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            ✕
-          </button>
+          <button onClick={onClose} style={{
+            background: "transparent", border: "1px solid var(--border)",
+            color: "var(--text-secondary)", cursor: "pointer",
+            borderRadius: "4px", width: 28, height: 28,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 13,
+          }}>✕</button>
         </div>
 
-        <div style={{ height: 1, background: "#181818", marginBottom: 20 }} />
+        <div style={{ height: 1, background: "var(--border)", marginBottom: 20 }} />
 
         {/* Title */}
         <div style={{ marginBottom: 14 }}>
-          <label
-            style={{
-              fontFamily: "'Barlow Condensed',sans-serif",
-              fontSize: "10px",
-              color: "#444",
-              letterSpacing: "0.14em",
-              display: "block",
-              marginBottom: 6,
-              textTransform: "uppercase",
-            }}
-          >
-            TITLE (OPTIONAL)
-          </label>
+          <label style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: "10px",
+            color: "var(--text-secondary)", letterSpacing: "0.14em",
+            display: "block", marginBottom: 6, textTransform: "uppercase",
+          }}>TITLE (OPTIONAL)</label>
           <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={title} onChange={e => setTitle(e.target.value)}
             placeholder="// enter title..."
-            style={fieldStyle}
-            onFocus={(e) => (e.target.style.borderColor = c.accent)}
-            onBlur={(e) => (e.target.style.borderColor = "#222")}
+            className="notes-input"
+            onFocus={e => e.target.style.borderColor = c.accent}
+            onBlur={e  => e.target.style.borderColor = "var(--border)"}
           />
         </div>
 
         {/* Content */}
         <div style={{ marginBottom: 14 }}>
-          <label
-            style={{
-              fontFamily: "'Barlow Condensed',sans-serif",
-              fontSize: "10px",
-              color: "#444",
-              letterSpacing: "0.14em",
-              display: "block",
-              marginBottom: 6,
-              textTransform: "uppercase",
-            }}
-          >
-            CONTENT *
-          </label>
+          <label style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: "10px",
+            color: "var(--text-secondary)", letterSpacing: "0.14em",
+            display: "block", marginBottom: 6, textTransform: "uppercase",
+          }}>CONTENT *</label>
           <textarea
             ref={contentRef}
             value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              setError("");
-            }}
+            onChange={e => { setContent(e.target.value); setError(""); }}
             placeholder="// write your note here..."
             rows={7}
+            className="notes-input"
             style={{
-              ...fieldStyle,
-              resize: "vertical",
-              lineHeight: 1.7,
-              border: `1px solid ${error ? "#ef4444" : "#222"}`,
+              resize: "vertical", lineHeight: 1.7,
+              borderColor: error ? "#ef4444" : undefined,
             }}
-            onKeyDown={(e) => {
+            onKeyDown={e => {
               if (e.key === "Escape") onClose();
               if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleSave();
             }}
-            onFocus={(e) =>
-              (e.target.style.borderColor = error ? "#ef4444" : c.accent)
-            }
-            onBlur={(e) =>
-              (e.target.style.borderColor = error ? "#ef4444" : "#222")
-            }
+            onFocus={e => e.target.style.borderColor = error ? "#ef4444" : c.accent}
+            onBlur={e  => e.target.style.borderColor = error ? "#ef4444" : "var(--border)"}
           />
           {error && (
-            <div
-              style={{
-                fontFamily: "'JetBrains Mono',monospace",
-                fontSize: "11px",
-                color: "#ef4444",
-                marginTop: 6,
-              }}
-            >
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "11px", color: "#ef4444", marginTop: 6 }}>
               {error}
             </div>
           )}
@@ -598,41 +354,27 @@ function NoteModal({ note, onClose, onSave }) {
 
         {/* Label picker */}
         <div style={{ marginBottom: 24 }}>
-          <label
-            style={{
-              fontFamily: "'Barlow Condensed',sans-serif",
-              fontSize: "10px",
-              color: "#444",
-              letterSpacing: "0.14em",
-              display: "block",
-              marginBottom: 8,
-              textTransform: "uppercase",
-            }}
-          >
-            LABEL
-          </label>
+          <label style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: "10px",
+            color: "var(--text-secondary)", letterSpacing: "0.14em",
+            display: "block", marginBottom: 8, textTransform: "uppercase",
+          }}>LABEL</label>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {COLORS.map((col) => {
+            {COLORS.map(col => {
               const cm = COLOR_MAP[col];
               const active = color === col;
               return (
-                <button
-                  key={col}
-                  onClick={() => setColor(col)}
-                  style={{
-                    padding: "5px 12px",
-                    borderRadius: "3px",
-                    border: `1px solid ${active ? cm.accent : "#222"}`,
-                    background: active ? `${cm.accent}15` : "transparent",
-                    color: active ? cm.accent : "#555",
-                    fontFamily: "'Barlow Condensed', sans-serif",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    letterSpacing: "0.1em",
-                    cursor: "pointer",
-                    transition: "all 0.1s",
-                  }}
-                >
+                <button key={col} onClick={() => setColor(col)} style={{
+                  padding: "5px 14px", borderRadius: "4px",
+                  border: `1px solid ${active ? cm.accent : "var(--border)"}`,
+                  background: active ? `${cm.accent}18` : "transparent",
+                  color: active ? cm.accent : "var(--text-secondary)",
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: "11px", fontWeight: 700,
+                  letterSpacing: "0.1em", cursor: "pointer", transition: "all 0.1s",
+                  display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: cm.accent, display: "inline-block", flexShrink: 0 }} />
                   {cm.tag}
                 </button>
               );
@@ -642,109 +384,53 @@ function NoteModal({ note, onClose, onSave }) {
 
         {/* Actions */}
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <TactBtn label="CANCEL" onClick={onClose} variant="ghost" />
-          <TactBtn
-            label={saving ? "SAVING..." : note ? "SAVE CHANGES" : "ADD NOTE"}
-            onClick={handleSave}
-            variant="primary"
-            disabled={saving}
-          />
+          <button className="tact-btn" onClick={onClose} style={{
+            padding: "9px 18px",
+            border: "1px solid var(--border)",
+            background: "transparent",
+            color: "var(--text-secondary)",
+          }}>CANCEL</button>
+          <button className="tact-btn" onClick={handleSave} disabled={saving} style={{
+            padding: "9px 22px",
+            background: saving ? `${c.accent}88` : c.accent,
+            border: `1px solid ${c.accent}`,
+            color: "#000",
+            boxShadow: saving ? "none" : `0 4px 14px ${c.accent}44`,
+          }}>{saving ? "SAVING..." : note ? "SAVE CHANGES" : "ADD NOTE"}</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Filter chip ───────────────────────────────────────────────
-function FilterChip({ label, color, active, onClick }) {
-  const [h, setH] = useState(false);
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setH(true)}
-      onMouseLeave={() => setH(false)}
-      style={{
-        padding: "5px 12px",
-        borderRadius: "3px",
-        border: `1px solid ${active ? color || "#f59e0b" : h ? "#383838" : "#1e1e1e"}`,
-        background: active ? `${color || "#f59e0b"}12` : "transparent",
-        color: active ? color || "#f59e0b" : h ? "#999" : "#444",
-        fontFamily: "'Barlow Condensed', sans-serif",
-        fontSize: "11px",
-        fontWeight: 700,
-        letterSpacing: "0.1em",
-        cursor: "pointer",
-        transition: "all 0.1s",
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-      }}
-    >
-      {color && (
-        <span
-          style={{
-            width: 5,
-            height: 5,
-            borderRadius: "1px",
-            background: color,
-            display: "inline-block",
-          }}
-        />
-      )}
-      {label}
-    </button>
-  );
-}
-
-// ── Section label ─────────────────────────────────────────────
+// ── Section divider ───────────────────────────────────────────
 function SectionLabel({ label, count }) {
   if (!label) return null;
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        marginBottom: 12,
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "'Barlow Condensed', sans-serif",
-          fontSize: "11px",
-          fontWeight: 800,
-          color: "#383838",
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "10px",
-          color: "#2a2a2a",
-          border: "1px solid #1e1e1e",
-          borderRadius: "2px",
-          padding: "1px 6px",
-        }}
-      >
-        {count}
-      </span>
-      <div style={{ flex: 1, height: "1px", background: "#181818" }} />
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+      <span style={{
+        fontFamily: "'Barlow Condensed', sans-serif", fontSize: "11px",
+        fontWeight: 800, color: "var(--text-secondary)",
+        letterSpacing: "0.16em", textTransform: "uppercase", opacity: 0.6,
+      }}>{label}</span>
+      <span style={{
+        fontFamily: "'JetBrains Mono', monospace", fontSize: "10px",
+        color: "var(--text-secondary)", opacity: 0.4,
+        border: "1px solid var(--border)", borderRadius: "3px", padding: "1px 6px",
+      }}>{count}</span>
+      <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
     </div>
   );
 }
 
-// ── Main ──────────────────────────────────────────────────────
+// ── Main page ─────────────────────────────────────────────────
 export default function NotesPage() {
-  const [notes, setNotes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState(null);
-  const [search, setSearch] = useState("");
+  const [notes,       setNotes]       = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [modal,       setModal]       = useState(null);
+  const [search,      setSearch]      = useState("");
   const [filterColor, setFilterColor] = useState("all");
-  const [toast, setToast] = useState(null);
+  const [toast,       setToast]       = useState(null);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -766,15 +452,13 @@ export default function NotesPage() {
 
   const handleSave = async (payload) => {
     const isEdit = modal && modal._id;
-    const res = isEdit
-      ? await noteAPI.update(modal._id, payload)
-      : await noteAPI.create(payload);
+    const res = isEdit ? await noteAPI.update(modal._id, payload) : await noteAPI.create(payload);
     const saved = res.data;
     if (isEdit) {
-      setNotes((n) => n.map((x) => (x._id === saved._id ? saved : x)));
+      setNotes(n => n.map(x => x._id === saved._id ? saved : x));
       showToast("NOTE UPDATED");
     } else {
-      setNotes((n) => [saved, ...n]);
+      setNotes(n => [saved, ...n]);
       showToast("NOTE CREATED");
     }
   };
@@ -782,7 +466,7 @@ export default function NotesPage() {
   const handleDelete = async (id) => {
     try {
       await noteAPI.delete(id);
-      setNotes((n) => n.filter((x) => x._id !== id));
+      setNotes(n => n.filter(x => x._id !== id));
       showToast("NOTE DELETED");
     } catch (e) {
       showToast(e.message || "DELETE FAILED", "error");
@@ -792,284 +476,189 @@ export default function NotesPage() {
   const handlePin = async (note) => {
     try {
       const res = await noteAPI.togglePin(note._id);
-      setNotes((n) => n.map((x) => (x._id === res.data._id ? res.data : x)));
+      setNotes(n => n.map(x => x._id === res.data._id ? res.data : x));
     } catch (e) {
       showToast(e.message || "PIN FAILED", "error");
     }
   };
 
   const filtered = notes
-    .filter((n) => {
+    .filter(n => {
       const q = search.toLowerCase();
       return (
         (n.title + " " + n.content).toLowerCase().includes(q) &&
         (filterColor === "all" || n.color === filterColor)
       );
     })
-    .sort(
-      (a, b) =>
-        b.pinned - a.pinned || new Date(b.updatedAt) - new Date(a.updatedAt),
-    );
+    .sort((a, b) => (b.pinned - a.pinned) || (new Date(b.updatedAt) - new Date(a.updatedAt)));
 
-  const pinned = filtered.filter((n) => n.pinned);
-  const unpinned = filtered.filter((n) => !n.pinned);
+  const pinned   = filtered.filter(n => n.pinned);
+  const unpinned = filtered.filter(n => !n.pinned);
 
   return (
-    <>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
-        rel="stylesheet"
-      />
-      <Background />
+    <div className="notes-page" style={{ minHeight: "100%", paddingBottom: 60 }}>
+      {injectStyles()}
 
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          minHeight: "100vh",
-          padding: "36px 28px 100px",
-          maxWidth: "1140px",
-          margin: "0 auto",
-        }}
-      >
-        {/* ── Header ── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 16,
-            marginBottom: 32,
-            paddingBottom: 24,
-            borderBottom: "1px solid #181818",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "10px",
-                color: "#f59e0b",
-                letterSpacing: "0.22em",
-                marginBottom: 10,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <span style={{ animation: "blink 1.4s step-end infinite" }}>
-                ▶
-              </span>
-              MONEYTRACK / NOTES
-            </div>
-            <h1
-              style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: "clamp(52px, 8vw, 80px)",
-                fontWeight: 900,
-                lineHeight: 0.88,
-                color: "#fff",
-                margin: "0 0 14px",
-                letterSpacing: "-0.01em",
-                textTransform: "uppercase",
-              }}
-            >
-              MY
-              <br />
-              <span
-                style={{ color: "#f59e0b", WebkitTextStroke: "1px #f59e0b" }}
-              >
-                NOTES
-              </span>
-            </h1>
-            <div
-              style={{
-                display: "flex",
-                gap: 16,
-                alignItems: "center",
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "11px",
-                color: "#383838",
-              }}
-            >
-              <span>
-                <span style={{ color: "#f59e0b" }}>{notes.length}</span> TOTAL
-              </span>
-              <span style={{ color: "#1e1e1e" }}>|</span>
-              <span>
-                <span style={{ color: "#f59e0b" }}>{pinned.length}</span> PINNED
-              </span>
-              <span style={{ color: "#1e1e1e" }}>|</span>
-              <span>
-                <span style={{ color: "#f59e0b" }}>{unpinned.length}</span> OPEN
-              </span>
-            </div>
+      {/* ── Page header ── */}
+      <div style={{
+        display: "flex", alignItems: "flex-start",
+        justifyContent: "space-between", flexWrap: "wrap",
+        gap: 12, marginBottom: 28,
+        paddingBottom: 20,
+        borderBottom: "1px solid var(--border)",
+      }}>
+        <div>
+          {/* Breadcrumb */}
+          <div style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: "10px",
+            color: "#f59e0b", letterSpacing: "0.2em", marginBottom: 8,
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <span style={{ animation: "notes-blink 1.4s step-end infinite" }}>▶</span>
+            MONEYTRACK / NOTES
           </div>
 
-          <TactBtn
-            icon="+"
-            label="NEW NOTE"
-            onClick={() => setModal("new")}
-            variant="primary"
+          {/* Title */}
+          <h1 style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontSize: "clamp(40px, 5vw, 60px)",
+            fontWeight: 900, lineHeight: 0.9,
+            color: "var(--text-primary)", margin: "0 0 12px",
+            letterSpacing: "-0.01em", textTransform: "uppercase",
+          }}>
+            MY <span style={{ color: "#f59e0b" }}>NOTES</span>
+          </h1>
+
+          {/* Stats */}
+          <div style={{
+            display: "flex", gap: 14, alignItems: "center",
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "11px", color: "var(--text-secondary)", opacity: 0.7,
+          }}>
+            <span><span style={{ color: "#f59e0b", opacity: 1 }}>{notes.length}</span> TOTAL</span>
+            <span style={{ opacity: 0.3 }}>|</span>
+            <span><span style={{ color: "#f59e0b", opacity: 1 }}>{pinned.length}</span> PINNED</span>
+            <span style={{ opacity: 0.3 }}>|</span>
+            <span><span style={{ color: "#f59e0b", opacity: 1 }}>{unpinned.length}</span> OPEN</span>
+          </div>
+        </div>
+
+        {/* New note button */}
+        <button className="tact-btn" onClick={() => setModal("new")} style={{
+          padding: "10px 20px",
+          background: "#f59e0b", border: "1px solid #f59e0b",
+          color: "#000",
+          boxShadow: "0 4px 16px rgba(245,158,11,0.3)",
+          alignSelf: "flex-start",
+        }}>
+          <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> NEW NOTE
+        </button>
+      </div>
+
+      {/* ── Search + filters ── */}
+      <div style={{
+        display: "flex", gap: 10, marginBottom: 24,
+        flexWrap: "wrap", alignItems: "center",
+      }}>
+        {/* Search */}
+        <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+          <span style={{
+            position: "absolute", left: 10, top: "50%",
+            transform: "translateY(-50%)",
+            color: "var(--text-secondary)", fontSize: 14, opacity: 0.5,
+          }}>⌕</span>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="search notes..."
+            className="notes-input"
+            style={{ paddingLeft: 32 }}
+            onFocus={e => e.target.style.borderColor = "#f59e0b"}
+            onBlur={e  => e.target.style.borderColor = "var(--border)"}
           />
         </div>
 
-        {/* ── Search + filters ── */}
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            marginBottom: 28,
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          <div style={{ position: "relative", flex: 1, minWidth: 220 }}>
-            <span
-              style={{
-                position: "absolute",
-                left: 10,
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "13px",
-                color: "#383838",
-              }}
+        {/* Filter chips */}
+        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+          <button
+            className={`filter-chip ${filterColor === "all" ? "active" : ""}`}
+            onClick={() => setFilterColor("all")}
+            style={filterColor === "all" ? { borderColor: "#f59e0b", color: "#f59e0b", background: "rgba(245,158,11,0.08)" } : {}}
+          >ALL</button>
+          {COLORS.map(col => (
+            <button
+              key={col}
+              className={`filter-chip ${filterColor === col ? "active" : ""}`}
+              onClick={() => setFilterColor(filterColor === col ? "all" : col)}
+              style={filterColor === col ? {
+                borderColor: COLOR_MAP[col].accent,
+                color: COLOR_MAP[col].accent,
+                background: `${COLOR_MAP[col].accent}10`,
+              } : {}}
             >
-              ⌕
-            </span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="search notes..."
-              style={{
-                width: "100%",
-                padding: "9px 12px 9px 30px",
-                background: "#0a0a0a",
-                border: "1px solid #1e1e1e",
-                borderRadius: "4px",
-                color: "#e5e5e5",
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "12px",
-                outline: "none",
-                boxSizing: "border-box",
-                transition: "border-color 0.1s",
-              }}
-              onFocus={(e) => (e.target.style.borderColor = "#f59e0b")}
-              onBlur={(e) => (e.target.style.borderColor = "#1e1e1e")}
-            />
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: COLOR_MAP[col].accent, display: "inline-block" }} />
+              {COLOR_MAP[col].tag}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Loading ── */}
+      {loading && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10, paddingTop: 50,
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+          color: "var(--text-secondary)", opacity: 0.5,
+        }}>
+          <span style={{ animation: "notes-spin 0.8s linear infinite", display: "inline-block" }}>⟳</span>
+          LOADING NOTES...
+        </div>
+      )}
+
+      {/* ── Empty ── */}
+      {!loading && filtered.length === 0 && (
+        <div style={{ paddingTop: 50 }}>
+          <div style={{
+            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 52,
+            fontWeight: 900, textTransform: "uppercase", lineHeight: 1,
+            color: "var(--border)", marginBottom: 10,
+          }}>
+            {search ? "NO RESULTS" : "EMPTY"}
           </div>
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-            <FilterChip
-              label="ALL"
-              active={filterColor === "all"}
-              onClick={() => setFilterColor("all")}
-            />
-            {COLORS.map((col) => (
-              <FilterChip
-                key={col}
-                label={COLOR_MAP[col].tag}
-                color={COLOR_MAP[col].accent}
-                active={filterColor === col}
-                onClick={() =>
-                  setFilterColor(filterColor === col ? "all" : col)
-                }
-              />
+          <div style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+            color: "var(--text-secondary)", opacity: 0.4,
+          }}>
+            {search ? `// no notes matching "${search}"` : "// press NEW NOTE to get started"}
+          </div>
+        </div>
+      )}
+
+      {/* ── Pinned ── */}
+      {!loading && pinned.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <SectionLabel label="◆ PINNED" count={pinned.length} />
+          <div style={{ columns: "300px", columnGap: "10px" }}>
+            {pinned.map((note, i) => (
+              <NoteCard key={note._id} note={note} index={i}
+                onEdit={setModal} onDelete={handleDelete} onPin={handlePin} />
             ))}
           </div>
         </div>
+      )}
 
-        {/* ── Loading ── */}
-        {loading && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              color: "#383838",
-              paddingTop: 60,
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 12,
-            }}
-          >
-            <div style={{ animation: "spin 0.8s linear infinite" }}>⟳</div>
-            LOADING NOTES...
+      {/* ── Others ── */}
+      {!loading && unpinned.length > 0 && (
+        <div>
+          <SectionLabel label={pinned.length > 0 ? "▸ NOTES" : ""} count={unpinned.length} />
+          <div style={{ columns: "300px", columnGap: "10px" }}>
+            {unpinned.map((note, i) => (
+              <NoteCard key={note._id} note={note} index={i + pinned.length}
+                onEdit={setModal} onDelete={handleDelete} onPin={handlePin} />
+            ))}
           </div>
-        )}
-
-        {/* ── Empty ── */}
-        {!loading && filtered.length === 0 && (
-          <div style={{ paddingTop: 60 }}>
-            <div
-              style={{
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: 56,
-                fontWeight: 900,
-                color: "#181818",
-                textTransform: "uppercase",
-                letterSpacing: "0.02em",
-                lineHeight: 1,
-                marginBottom: 10,
-              }}
-            >
-              {search ? "NO RESULTS" : "EMPTY"}
-            </div>
-            <div
-              style={{
-                fontFamily: "'JetBrains Mono',monospace",
-                fontSize: 12,
-                color: "#2a2a2a",
-              }}
-            >
-              {search
-                ? `// no notes matching "${search}"`
-                : "// press NEW NOTE to get started"}
-            </div>
-          </div>
-        )}
-
-        {/* ── Pinned ── */}
-        {!loading && pinned.length > 0 && (
-          <div style={{ marginBottom: 28 }}>
-            <SectionLabel label="◆ PINNED" count={pinned.length} />
-            <div style={{ columns: "320px", columnGap: "10px" }}>
-              {pinned.map((note, i) => (
-                <NoteCard
-                  key={note._id}
-                  note={note}
-                  index={i}
-                  onEdit={setModal}
-                  onDelete={handleDelete}
-                  onPin={handlePin}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Others ── */}
-        {!loading && unpinned.length > 0 && (
-          <div>
-            <SectionLabel
-              label={pinned.length > 0 ? "▸ NOTES" : ""}
-              count={unpinned.length}
-            />
-            <div style={{ columns: "320px", columnGap: "10px" }}>
-              {unpinned.map((note, i) => (
-                <NoteCard
-                  key={note._id}
-                  note={note}
-                  index={i + pinned.length}
-                  onEdit={setModal}
-                  onDelete={handleDelete}
-                  onPin={handlePin}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── Modal ── */}
       {modal && (
@@ -1082,35 +671,25 @@ export default function NotesPage() {
 
       {/* ── Toast ── */}
       {toast && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 28,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: toast.type === "error" ? "#120000" : "#001208",
-            border: `1px solid ${toast.type === "error" ? "#ef4444" : "#10b981"}`,
-            borderLeft: `3px solid ${toast.type === "error" ? "#ef4444" : "#10b981"}`,
-            color: toast.type === "error" ? "#ef4444" : "#10b981",
-            padding: "10px 20px",
-            borderRadius: "4px",
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "11px",
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            boxShadow: "0 8px 40px rgba(0,0,0,0.7)",
-            zIndex: 200,
-            whiteSpace: "nowrap",
-            animation: "toastIn 0.22s cubic-bezier(.34,1.56,.64,1)",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
+        <div style={{
+          position: "fixed", bottom: 28, left: "50%",
+          transform: "translateX(-50%)",
+          background: "var(--card-bg)",
+          border: `1px solid ${toast.type === "error" ? "#ef4444" : "#10b981"}`,
+          borderLeft: `3px solid ${toast.type === "error" ? "#ef4444" : "#10b981"}`,
+          color: toast.type === "error" ? "#ef4444" : "#10b981",
+          padding: "10px 20px", borderRadius: "6px",
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+          zIndex: 9999, whiteSpace: "nowrap",
+          animation: "notes-toastIn 0.22s cubic-bezier(.34,1.56,.64,1)",
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
           <span>{toast.type === "error" ? "✕" : "✓"}</span>
           {toast.msg}
         </div>
       )}
-    </>
+    </div>
   );
 }
