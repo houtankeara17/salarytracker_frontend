@@ -11,8 +11,9 @@ const noteAPI = {
 };
 
 // ── Color / label system — dark & tactical ────────────────────
+// Keys match backend enum: yellow | blue | green | pink | purple | white
 const COLOR_MAP = {
-  default: {
+  yellow: {
     bg: "#111111",
     border: "#2a2a2a",
     accent: "#f59e0b",
@@ -20,7 +21,7 @@ const COLOR_MAP = {
     tag: "DEFAULT",
     tagBg: "#f59e0b",
   },
-  urgent: {
+  pink: {
     bg: "#130800",
     border: "#7c2d12",
     accent: "#ea580c",
@@ -28,7 +29,7 @@ const COLOR_MAP = {
     tag: "URGENT",
     tagBg: "#ea580c",
   },
-  work: {
+  blue: {
     bg: "#0a1628",
     border: "#1e3a5f",
     accent: "#3b82f6",
@@ -36,7 +37,7 @@ const COLOR_MAP = {
     tag: "WORK",
     tagBg: "#3b82f6",
   },
-  done: {
+  green: {
     bg: "#061210",
     border: "#134e4a",
     accent: "#10b981",
@@ -44,7 +45,7 @@ const COLOR_MAP = {
     tag: "DONE",
     tagBg: "#10b981",
   },
-  idea: {
+  purple: {
     bg: "#12101a",
     border: "#3b1f6b",
     accent: "#8b5cf6",
@@ -52,7 +53,7 @@ const COLOR_MAP = {
     tag: "IDEA",
     tagBg: "#8b5cf6",
   },
-  risk: {
+  white: {
     bg: "#130a0a",
     border: "#7f1d1d",
     accent: "#ef4444",
@@ -223,7 +224,7 @@ function IconBtn({ icon, title, onClick, danger }) {
 
 // ── Note card ─────────────────────────────────────────────────
 function NoteCard({ note, onEdit, onDelete, onPin, index }) {
-  const c = COLOR_MAP[note.color] || COLOR_MAP.default;
+  const c = COLOR_MAP[note.color] || COLOR_MAP.yellow;
   const [hover, setHover] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -391,7 +392,7 @@ function NoteCard({ note, onEdit, onDelete, onPin, index }) {
 function NoteModal({ note, onClose, onSave }) {
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
-  const [color, setColor] = useState(note?.color || "default");
+  const [color, setColor] = useState(note?.color || "yellow");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const contentRef = useRef();
