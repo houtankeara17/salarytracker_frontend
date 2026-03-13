@@ -160,8 +160,8 @@ const IconRow = () => (
 );
 
 const VIEW_MODES = [
-  { key: "table", label: "Table", Icon: IconTable },
   { key: "box", label: "Box", Icon: IconBox },
+  { key: "table", label: "Table", Icon: IconTable },
   { key: "row", label: "Row", Icon: IconRow },
 ];
 
@@ -177,7 +177,7 @@ export default function ExpensesPage() {
   const [filterMonth, setFilterMonth] = useState("");
   const [filterYear, setFilterYear] = useState("");
   const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState("table");
+  const [viewMode, setViewMode] = useState("box");
 
   // ── Pagination state ────────────────────────────────────────────────────────
   const [pageSize, setPageSize] = useState(10); // number | "All"
@@ -372,7 +372,7 @@ export default function ExpensesPage() {
                 className="px-4 py-3"
                 style={{ border: "1px solid var(--border)" }}
               >
-                <div className="font-bold text-sm" style={{ color: "#0ea5e9" }}>
+                <div className="font-bold text-sm" style={{ color: "#6366f1" }}>
                   {formatAmount(e.amountUSD, e.amountKHR)}
                 </div>
                 <div
@@ -466,7 +466,7 @@ export default function ExpensesPage() {
           <div
             style={{
               height: "3px",
-              background: "linear-gradient(90deg, #0ea5e9, #38bdf8)",
+              background: "linear-gradient(90deg, #6366f1, #4f46e5)",
             }}
           />
           <div className="p-4">
@@ -504,7 +504,7 @@ export default function ExpensesPage() {
                 {t("amount")}
               </span>
               <div className="text-right">
-                <div className="font-bold text-sm" style={{ color: "#0ea5e9" }}>
+                <div className="font-bold text-sm" style={{ color: "#6366f1" }}>
                   {formatAmount(e.amountUSD, e.amountKHR)}
                 </div>
                 <div
@@ -583,7 +583,7 @@ export default function ExpensesPage() {
               width: "3px",
               height: "36px",
               borderRadius: "2px",
-              background: "linear-gradient(180deg, #0ea5e9, #38bdf8)",
+              background: "linear-gradient(180deg, #6366f1, #4f46e5)",
               flexShrink: 0,
             }}
           />
@@ -636,7 +636,7 @@ export default function ExpensesPage() {
             {formatDate(e.date, language, "medium")}
           </span>
           <div className="flex-shrink-0 text-right w-24">
-            <div className="font-bold text-sm" style={{ color: "#0ea5e9" }}>
+            <div className="font-bold text-sm" style={{ color: "#6366f1" }}>
               {formatAmount(e.amountUSD, e.amountKHR)}
             </div>
             <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
@@ -715,10 +715,10 @@ export default function ExpensesPage() {
                       transition: "all 0.15s ease",
                       color: active ? "#fff" : "var(--text-secondary)",
                       background: active
-                        ? "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)"
+                        ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)"
                         : "transparent",
                       boxShadow: active
-                        ? "0 2px 6px rgba(14,165,233,0.3)"
+                        ? "0 2px 6px rgba(99, 102, 241, 0.3)"
                         : "none",
                     }}
                   >
@@ -757,7 +757,7 @@ export default function ExpensesPage() {
               }}
               onMouseEnter={(ev) => {
                 if (safePage !== 1)
-                  ev.currentTarget.style.borderColor = "#0ea5e9";
+                  ev.currentTarget.style.borderColor = "#6366f1 ";
               }}
               onMouseLeave={(ev) => {
                 ev.currentTarget.style.borderColor = "var(--border)";
@@ -795,16 +795,16 @@ export default function ExpensesPage() {
                     color: safePage === p ? "#fff" : "var(--text-primary)",
                     background:
                       safePage === p
-                        ? "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)"
+                        ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)"
                         : "var(--bg-secondary)",
                     boxShadow:
                       safePage === p
-                        ? "0 2px 8px rgba(14,165,233,0.35)"
+                        ? "0 2px 8px rgba(99, 102, 241, 0.35)"
                         : "none",
                   }}
                   onMouseEnter={(ev) => {
                     if (safePage !== p)
-                      ev.currentTarget.style.borderColor = "#0ea5e9";
+                      ev.currentTarget.style.borderColor = "#6366f1 ";
                   }}
                   onMouseLeave={(ev) => {
                     if (safePage !== p)
@@ -840,7 +840,7 @@ export default function ExpensesPage() {
               }}
               onMouseEnter={(ev) => {
                 if (safePage !== totalPages)
-                  ev.currentTarget.style.borderColor = "#0ea5e9";
+                  ev.currentTarget.style.borderColor = "#6366f1";
               }}
               onMouseLeave={(ev) => {
                 ev.currentTarget.style.borderColor = "var(--border)";
@@ -978,10 +978,10 @@ export default function ExpensesPage() {
                     transition: "all 0.18s ease",
                     color: active ? "#fff" : "var(--text-secondary)",
                     background: active
-                      ? "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)"
+                      ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)"
                       : "transparent",
                     boxShadow: active
-                      ? "0 2px 8px rgba(14,165,233,0.35)"
+                      ? "0 2px 8px rgba(99,102,241,0.35)"
                       : "none",
                   }}
                 >
@@ -1013,8 +1013,8 @@ export default function ExpensesPage() {
           </div>
         ) : (
           <>
-            {viewMode === "table" && <TableView />}
             {viewMode === "box" && <BoxView />}
+            {viewMode === "table" && <TableView />}
             {viewMode === "row" && <RowView />}
             <PaginationBar />
           </>

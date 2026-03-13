@@ -7,8 +7,8 @@ import KhmerDateInput from "../KhmerDateInput";
 
 const CATEGORIES = [
   { value: "food", emoji: "🍚" },
-  { value: "drink", emoji: "🥤" },
-  { value: "fruit", emoji: "🍓" },
+  { value: "Drink", emoji: "🥤" },
+  { value: "Fruit", emoji: "🍓" },
   { value: "transport", emoji: "🚗" },
   { value: "clothing", emoji: "👕" },
   { value: "health", emoji: "💊" },
@@ -19,7 +19,12 @@ const CATEGORIES = [
   { value: "other", emoji: "💸" },
 ];
 
-const PAYMENT_METHODS = ["cash", "qr", "card", "transfer"];
+const PAYMENT_METHODS = [
+  { value: "cash", icon: "💵" },
+  { value: "qr", icon: "📱" },
+  { value: "card", icon: "💳" },
+  { value: "transfer", icon: "🏦" },
+];
 
 const defaultForm = {
   itemName: "",
@@ -32,6 +37,191 @@ const defaultForm = {
   paymentMethod: "cash",
   noted: "",
   imageQr: "",
+};
+
+const styles = {
+  overlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(10,10,16,0.85)",
+    backdropFilter: "blur(6px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "16px",
+    zIndex: 1000,
+  },
+  modal: {
+    background: "#16161e",
+    border: "1px solid rgba(99,102,241,0.18)",
+    borderRadius: "20px",
+    width: "100%",
+    maxWidth: "480px",
+    maxHeight: "90vh",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
+    animation: "emSlideUp 0.28s cubic-bezier(.16,1,.3,1)",
+  },
+  header: {
+    padding: "20px 24px 18px",
+    borderBottom: "1px solid rgba(255,255,255,0.06)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexShrink: 0,
+  },
+  headerLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+  iconWrap: {
+    width: "36px",
+    height: "36px",
+    borderRadius: "10px",
+    background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "16px",
+    boxShadow: "0 4px 14px rgba(99,102,241,0.4)",
+  },
+  title: {
+    fontSize: "15px",
+    fontWeight: 700,
+    color: "#f0f0f5",
+    letterSpacing: "-0.2px",
+  },
+  subtitle: {
+    fontSize: "11px",
+    color: "#6366f1",
+    fontWeight: 500,
+    marginTop: "1px",
+  },
+  closeBtn: {
+    width: "32px",
+    height: "32px",
+    borderRadius: "8px",
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(255,255,255,0.04)",
+    color: "#888",
+    fontSize: "14px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.15s",
+  },
+  body: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "20px 24px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "18px",
+  },
+  label: {
+    fontSize: "11px",
+    fontWeight: 600,
+    color: "#888",
+    letterSpacing: "0.5px",
+    textTransform: "uppercase",
+    marginBottom: "6px",
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+  },
+  req: {
+    color: "#6366f1",
+    fontSize: "13px",
+    lineHeight: 1,
+  },
+  input: {
+    width: "100%",
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: "10px",
+    padding: "10px 14px",
+    fontSize: "13px",
+    color: "#e8e8f0",
+    transition: "all 0.15s",
+    boxSizing: "border-box",
+    outline: "none",
+    fontFamily: "inherit",
+  },
+  row: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "12px",
+  },
+  catGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "8px",
+  },
+  payGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "8px",
+  },
+  amountPreview: {
+    background: "rgba(99,102,241,0.07)",
+    border: "1px solid rgba(99,102,241,0.15)",
+    borderRadius: "10px",
+    padding: "10px 14px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: "8px",
+  },
+  previewLabel: {
+    fontSize: "11px",
+    color: "#666",
+    fontWeight: 500,
+  },
+  previewValue: {
+    fontSize: "16px",
+    fontWeight: 700,
+    color: "#818cf8",
+    letterSpacing: "-0.5px",
+  },
+  footer: {
+    padding: "16px 24px 20px",
+    borderTop: "1px solid rgba(255,255,255,0.06)",
+    display: "flex",
+    gap: "10px",
+    flexShrink: 0,
+  },
+  cancelBtn: {
+    flex: 1,
+    padding: "12px",
+    borderRadius: "12px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,255,255,0.04)",
+    color: "#888",
+    fontSize: "13px",
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "all 0.15s",
+    fontFamily: "inherit",
+  },
+  submitBtn: {
+    flex: 2,
+    padding: "12px",
+    borderRadius: "12px",
+    border: "none",
+    background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+    color: "#fff",
+    fontSize: "13px",
+    fontWeight: 700,
+    cursor: "pointer",
+    transition: "all 0.18s",
+    fontFamily: "inherit",
+    boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
+    letterSpacing: "0.1px",
+  },
 };
 
 export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
@@ -69,7 +259,6 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
   const handleQrUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = () => {
       setForm((prev) => ({ ...prev, imageQr: reader.result }));
@@ -78,7 +267,6 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
     reader.readAsDataURL(file);
   };
 
-  // ✅ VALIDATION FUNCTION
   const validateForm = () => {
     if (!form.itemName.trim()) return "Item name is required";
     if (!form.date) return "Date is required";
@@ -96,7 +284,6 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
     if (!form.paymentMethod) return "Payment method is required";
     if (form.paymentMethod === "qr" && !form.imageQr)
       return "QR image is required for QR payment";
-
     return null;
   };
 
@@ -106,7 +293,6 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
       toast.error(error);
       return;
     }
-
     setLoading(true);
     try {
       if (editData) {
@@ -125,201 +311,407 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
     }
   };
 
+  // Compute live total preview
+  const totalPreview = () => {
+    const amt = Number(form.amount) || 0;
+    const qty = Number(form.quantity) || 1;
+    const total = amt * qty;
+    if (form.currency === "USD") return `$${total.toFixed(2)}`;
+    const rate = Number(form.exchangeRate) || 4100;
+    return `៛${Math.round(total).toLocaleString()} (~$${(total / rate).toFixed(2)})`;
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box max-w-lg" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div
-          className="flex items-center justify-between p-5"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
-          <h3 className="font-display font-bold text-lg">
-            {editData ? t("edit") : t("addNew")} {t("expenses")}
-          </h3>
-          <button className="btn btn-ghost p-2" onClick={onClose}>
-            ✕
-          </button>
-        </div>
+    <>
+      <style>{`
+        @keyframes emSlideUp {
+          from { opacity: 0; transform: translateY(24px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .em-input:focus {
+          border-color: rgba(99,102,241,0.5) !important;
+          background: rgba(99,102,241,0.06) !important;
+          box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
+        }
+        .em-input::placeholder { color: #444; }
+        .em-cat-btn:hover { border-color: rgba(99,102,241,0.3) !important; background: rgba(99,102,241,0.06) !important; }
+        .em-pay-btn:hover { border-color: rgba(99,102,241,0.3) !important; color: #888 !important; }
+        .em-cancel-btn:hover { background: rgba(255,255,255,0.07) !important; color: #aaa !important; }
+        .em-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.5) !important; filter: brightness(1.08); }
+        .em-close-btn:hover { background: rgba(239,68,68,0.12) !important; border-color: rgba(239,68,68,0.3) !important; color: #ef4444 !important; }
+        .em-body::-webkit-scrollbar { width: 4px; }
+        .em-body::-webkit-scrollbar-track { background: transparent; }
+        .em-body::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 4px; }
+      `}</style>
 
-        <div className="p-5 space-y-4">
-          {/* Date */}
-          <div>
-            <label className="form-label">{t("date")} *</label>
-            <KhmerDateInput
-              name="date"
-              value={form.date}
-              onChange={handleChange}
-            />
+      <div style={styles.overlay} onClick={onClose}>
+        <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+          {/* ── Header ── */}
+          <div style={styles.header}>
+            <div style={styles.headerLeft}>
+              <div style={styles.iconWrap}>💸</div>
+              <div>
+                <div style={styles.title}>
+                  {editData ? t("edit") : t("addNew")} {t("expenses")}
+                </div>
+                <div style={styles.subtitle}>
+                  {editData ? "Update your record" : "Track your spending"}
+                </div>
+              </div>
+            </div>
+            <button
+              className="em-close-btn"
+              style={styles.closeBtn}
+              onClick={onClose}
+            >
+              ✕
+            </button>
           </div>
 
-          {/* Item Name */}
-          <div>
-            <label className="form-label">{t("itemName")} *</label>
-            <input
-              type="text"
-              name="itemName"
-              value={form.itemName}
-              onChange={handleChange}
-              className="form-input"
-              placeholder={
-                language === "kh" ? "ឈ្មោះទំនិញ..." : "What did you buy?"
-              }
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="form-label">{t("category")} *</label>
-            <div className="grid grid-cols-4 gap-2">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() =>
-                    setForm((p) => ({ ...p, category: cat.value }))
+          {/* ── Body ── */}
+          <div className="em-body" style={styles.body}>
+            {/* Date + Item Name */}
+            <div style={styles.row}>
+              <div>
+                <div style={styles.label}>
+                  {t("date")} <span style={styles.req}>*</span>
+                </div>
+                <KhmerDateInput
+                  name="date"
+                  value={form.date}
+                  onChange={handleChange}
+                  style={{ ...styles.input }}
+                  className="em-input"
+                />
+              </div>
+              <div>
+                <div style={styles.label}>
+                  {t("itemName")} <span style={styles.req}>*</span>
+                </div>
+                <input
+                  type="text"
+                  name="itemName"
+                  value={form.itemName}
+                  onChange={handleChange}
+                  className="em-input"
+                  style={styles.input}
+                  placeholder={
+                    language === "kh" ? "ឈ្មោះទំនិញ..." : "What did you buy?"
                   }
-                  className={`p-2 rounded-xl flex flex-col items-center gap-1 text-xs font-semibold ${
-                    form.category === cat.value
-                      ? "ring-2 ring-primary-500"
-                      : "btn-secondary"
-                  }`}
-                >
-                  <span className="text-xl">{cat.emoji}</span>
-                  <span style={{ fontSize: "10px" }}>{t(cat.value)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Amount & Currency */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="form-label">{t("amount")} *</label>
-              <input
-                type="number"
-                name="amount"
-                value={form.amount}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                className="form-input"
-              />
+                />
+              </div>
             </div>
 
+            {/* Category */}
             <div>
-              <label className="form-label">{t("currency")} *</label>
-              <select
-                name="currency"
-                value={form.currency}
-                onChange={handleChange}
-                className="form-input"
-              >
-                <option value="USD">$ USD</option>
-                <option value="KHR">៛ KHR</option>
-              </select>
+              <div style={styles.label}>
+                {t("category")} <span style={styles.req}>*</span>
+              </div>
+              <div style={styles.catGrid}>
+                {CATEGORIES.map((cat) => {
+                  const active = form.category === cat.value;
+                  return (
+                    <button
+                      key={cat.value}
+                      type="button"
+                      className="em-cat-btn"
+                      onClick={() =>
+                        setForm((p) => ({ ...p, category: cat.value }))
+                      }
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "4px",
+                        padding: "10px 6px 8px",
+                        borderRadius: "12px",
+                        border: active
+                          ? "1px solid #6366f1"
+                          : "1px solid rgba(255,255,255,0.06)",
+                        background: active
+                          ? "rgba(99,102,241,0.12)"
+                          : "rgba(255,255,255,0.03)",
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        position: "relative",
+                        boxShadow: active
+                          ? "0 0 0 1px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.08)"
+                          : "none",
+                      }}
+                    >
+                      {active && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: 3,
+                            right: 5,
+                            fontSize: "8px",
+                            color: "#818cf8",
+                            fontWeight: 700,
+                          }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                      <span style={{ fontSize: "18px", lineHeight: 1 }}>
+                        {cat.emoji}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "9.5px",
+                          fontWeight: 600,
+                          color: active ? "#818cf8" : "#666",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {t(cat.value)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* Exchange Rate */}
-          {form.currency === "KHR" && (
+            {/* Amount + Currency */}
             <div>
-              <label className="form-label">{t("exchangeRate")} *</label>
-              <input
-                type="number"
-                name="exchangeRate"
-                value={form.exchangeRate}
-                onChange={handleChange}
-                className="form-input"
-              />
+              <div style={styles.label}>
+                {t("amount")} <span style={styles.req}>*</span>
+              </div>
+              <div style={styles.row}>
+                {/* Amount input with prefix */}
+                <div style={{ position: "relative" }}>
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: "13px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: "#6366f1",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {form.currency === "USD" ? "$" : "៛"}
+                  </span>
+                  <input
+                    type="number"
+                    name="amount"
+                    value={form.amount}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="em-input"
+                    style={{ ...styles.input, paddingLeft: "28px" }}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                {/* Currency toggle */}
+                <div style={{ display: "flex", gap: "6px" }}>
+                  {["USD", "KHR"].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setForm((p) => ({ ...p, currency: c }))}
+                      style={{
+                        flex: 1,
+                        padding: "10px",
+                        borderRadius: "10px",
+                        border:
+                          form.currency === c
+                            ? "1px solid #6366f1"
+                            : "1px solid rgba(255,255,255,0.08)",
+                        background:
+                          form.currency === c
+                            ? "rgba(99,102,241,0.14)"
+                            : "rgba(255,255,255,0.03)",
+                        color: form.currency === c ? "#818cf8" : "#666",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        fontFamily: "inherit",
+                        boxShadow:
+                          form.currency === c
+                            ? "0 0 0 1px rgba(99,102,241,0.25)"
+                            : "none",
+                      }}
+                    >
+                      {c === "USD" ? "$ USD" : "៛ KHR"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Live preview */}
+              <div style={styles.amountPreview}>
+                <span style={styles.previewLabel}>Total Preview</span>
+                <span style={styles.previewValue}>{totalPreview()}</span>
+              </div>
             </div>
-          )}
 
-          {/* Quantity & Payment */}
-          <div className="grid grid-cols-2 gap-3">
+            {/* Exchange Rate (KHR only) */}
+            {form.currency === "KHR" && (
+              <div>
+                <div style={styles.label}>
+                  {t("exchangeRate")} <span style={styles.req}>*</span>
+                </div>
+                <input
+                  type="number"
+                  name="exchangeRate"
+                  value={form.exchangeRate}
+                  onChange={handleChange}
+                  className="em-input"
+                  style={styles.input}
+                />
+              </div>
+            )}
+
+            {/* Quantity */}
             <div>
-              <label className="form-label">{t("quantity")} *</label>
+              <div style={styles.label}>
+                {t("quantity")} <span style={styles.req}>*</span>
+              </div>
               <input
                 type="number"
                 name="quantity"
                 value={form.quantity}
                 onChange={handleChange}
                 min="1"
-                className="form-input"
+                className="em-input"
+                style={styles.input}
               />
             </div>
 
+            {/* Payment Method */}
             <div>
-              <label className="form-label">{t("paymentMethod")} *</label>
-              <select
-                name="paymentMethod"
-                value={form.paymentMethod}
-                onChange={handleChange}
-                className="form-input"
-              >
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {t(m)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* QR Upload */}
-          {form.paymentMethod === "qr" && (
-            <div>
-              <label className="form-label">{t("qrImage")} *</label>
-              <div className="flex gap-3 items-start">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleQrUpload}
-                  className="form-input py-2 text-xs"
-                />
-                {qrPreview && (
-                  <img
-                    src={qrPreview}
-                    alt="QR"
-                    className="w-16 h-16 rounded-lg object-cover border"
-                  />
-                )}
+              <div style={styles.label}>
+                {t("paymentMethod")} <span style={styles.req}>*</span>
+              </div>
+              <div style={styles.payGrid}>
+                {PAYMENT_METHODS.map((m) => {
+                  const active = form.paymentMethod === m.value;
+                  return (
+                    <button
+                      key={m.value}
+                      type="button"
+                      className="em-pay-btn"
+                      onClick={() =>
+                        setForm((p) => ({ ...p, paymentMethod: m.value }))
+                      }
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "5px",
+                        padding: "10px 4px 8px",
+                        borderRadius: "10px",
+                        border: active
+                          ? "1px solid #6366f1"
+                          : "1px solid rgba(255,255,255,0.06)",
+                        background: active
+                          ? "rgba(99,102,241,0.12)"
+                          : "rgba(255,255,255,0.03)",
+                        color: active ? "#818cf8" : "#555",
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        fontFamily: "inherit",
+                        textTransform: "capitalize",
+                        boxShadow: active
+                          ? "0 0 0 1px rgba(99,102,241,0.25)"
+                          : "none",
+                      }}
+                    >
+                      <span style={{ fontSize: "16px" }}>{m.icon}</span>
+                      {t(m.value)}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          )}
 
-          {/* Notes */}
-          <div>
-            <label className="form-label">{t("notes")}</label>
-            <textarea
-              name="noted"
-              value={form.noted}
-              onChange={handleChange}
-              className="form-input resize-none"
-              rows={2}
-            />
+            {/* QR Upload */}
+            {form.paymentMethod === "qr" && (
+              <div>
+                <div style={styles.label}>
+                  {t("qrImage")} <span style={styles.req}>*</span>
+                </div>
+                <div
+                  style={{ display: "flex", gap: "12px", alignItems: "center" }}
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleQrUpload}
+                    className="em-input"
+                    style={{
+                      ...styles.input,
+                      padding: "8px 14px",
+                      fontSize: "12px",
+                      flex: 1,
+                    }}
+                  />
+                  {qrPreview && (
+                    <img
+                      src={qrPreview}
+                      alt="QR"
+                      style={{
+                        width: "52px",
+                        height: "52px",
+                        borderRadius: "10px",
+                        objectFit: "cover",
+                        border: "1px solid rgba(99,102,241,0.3)",
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            <div>
+              <div style={styles.label}>{t("notes")}</div>
+              <textarea
+                name="noted"
+                value={form.noted}
+                onChange={handleChange}
+                className="em-input"
+                style={{ ...styles.input, resize: "none", minHeight: "70px" }}
+                placeholder="Optional notes..."
+              />
+            </div>
+          </div>
+
+          {/* ── Footer ── */}
+          <div style={styles.footer}>
+            <button
+              className="em-cancel-btn"
+              style={styles.cancelBtn}
+              onClick={onClose}
+            >
+              {t("cancel")}
+            </button>
+            <button
+              className="em-submit-btn"
+              style={styles.submitBtn}
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading
+                ? t("loading")
+                : editData
+                  ? `${t("update")} →`
+                  : `${t("add")} →`}
+            </button>
           </div>
         </div>
-
-        {/* Footer */}
-        <div
-          className="flex gap-3 p-5"
-          style={{ borderTop: "1px solid var(--border)" }}
-        >
-          <button className="btn btn-secondary flex-1" onClick={onClose}>
-            {t("cancel")}
-          </button>
-
-          <button
-            className="btn btn-primary flex-1"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? t("loading") : editData ? t("update") : t("add")}
-          </button>
-        </div>
       </div>
-    </div>
+    </>
   );
 }
