@@ -58,11 +58,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
   },
-  headerLeft: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-  },
+  headerLeft: { display: "flex", alignItems: "center", gap: "10px" },
   iconWrap: {
     width: "38px",
     height: "38px",
@@ -119,11 +115,7 @@ const styles = {
     alignItems: "center",
     gap: "4px",
   },
-  req: {
-    color: "#6366f1",
-    fontSize: "13px",
-    lineHeight: 1,
-  },
+  req: { color: "#6366f1", fontSize: "13px", lineHeight: 1 },
   input: {
     width: "100%",
     background: "rgba(255,255,255,0.04)",
@@ -138,11 +130,7 @@ const styles = {
     fontFamily: "inherit",
     appearance: "none",
   },
-  row: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "12px",
-  },
+  row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" },
   amountPreview: {
     background: "rgba(99,102,241,0.07)",
     border: "1px solid rgba(99,102,241,0.15)",
@@ -152,17 +140,6 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     marginTop: "8px",
-  },
-  previewLabel: {
-    fontSize: "11px",
-    color: "#666",
-    fontWeight: 500,
-  },
-  previewValue: {
-    fontSize: "16px",
-    fontWeight: 700,
-    color: "#818cf8",
-    letterSpacing: "-0.5px",
   },
   footer: {
     padding: "16px 24px 20px",
@@ -197,6 +174,19 @@ const styles = {
     fontFamily: "inherit",
     boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
   },
+};
+
+// Tries every known API response shape to extract the saved item
+const extractItem = (res) => {
+  if (!res) return null;
+  // try: res.data.data, res.data.salary, res.data.saving, res.data, res itself
+  const d = res?.data;
+  if (d && typeof d === "object" && d._id) return d; // res.data is the item
+  if (d?.data?._id) return d.data; // res.data.data
+  if (d?.salary?._id) return d.salary; // res.data.salary
+  if (d?.saving?._id) return d.saving; // res.data.saving
+  if (res?._id) return res; // res itself is the item
+  return null;
 };
 
 export default function SalaryModal({
@@ -237,13 +227,17 @@ export default function SalaryModal({
     setLoading(true);
     try {
       if (editData) {
-        await apiCall.update(editData._id, form);
+        const res = await apiCall.update(editData._id, form);
         toast.success(t("updatedSuccess"));
+        // extractItem tries all shapes; if API returns nothing, merge form into editData
+        const saved = extractItem(res) || { ...editData, ...form };
+        onSuccess(saved); // ← always passes the item, never null for update
       } else {
-        await apiCall.create(form);
+        const res = await apiCall.create(form);
         toast.success(t("addedSuccess"));
+        const saved = extractItem(res);
+        onSuccess(saved); // ← passes item if API returns it, null triggers fallback load()
       }
-      onSuccess();
       onClose();
     } catch (err) {
       toast.error(err.message);
@@ -289,7 +283,7 @@ export default function SalaryModal({
 
       <div style={styles.overlay} onClick={onClose}>
         <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-          {/* ── Header ── */}
+          {/* Header */}
           <div style={styles.header}>
             <div style={styles.headerLeft}>
               <div style={styles.iconWrap}>{icon}</div>
@@ -309,7 +303,7 @@ export default function SalaryModal({
             </button>
           </div>
 
-          {/* ── Body ── */}
+          {/* Body */}
           <div style={styles.body}>
             {/* Month + Year */}
             <div style={styles.row}>
@@ -353,7 +347,6 @@ export default function SalaryModal({
                 {t("amount")} <span style={styles.req}>*</span>
               </div>
               <div style={styles.row}>
-                {/* Amount with prefix */}
                 <div style={{ position: "relative" }}>
                   <span
                     style={{
@@ -381,8 +374,6 @@ export default function SalaryModal({
                     placeholder="0.00"
                   />
                 </div>
-
-                {/* Currency toggle */}
                 <div style={{ display: "flex", gap: "6px" }}>
                   {["USD", "KHR"].map((c) => (
                     <button
@@ -411,15 +402,26 @@ export default function SalaryModal({
                   ))}
                 </div>
               </div>
-
-              {/* Live preview */}
               <div style={styles.amountPreview}>
-                <span style={styles.previewLabel}>Amount Preview</span>
-                <span style={styles.previewValue}>{totalPreview()}</span>
+                <span
+                  style={{ fontSize: "11px", color: "#666", fontWeight: 500 }}
+                >
+                  Amount Preview
+                </span>
+                <span
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "#818cf8",
+                    letterSpacing: "-0.5px",
+                  }}
+                >
+                  {totalPreview()}
+                </span>
               </div>
             </div>
 
-            {/* Exchange Rate (KHR only) */}
+            {/* Exchange Rate */}
             {form.currency === "KHR" && (
               <div>
                 <div style={styles.label}>
@@ -450,7 +452,7 @@ export default function SalaryModal({
             </div>
           </div>
 
-          {/* ── Footer ── */}
+          {/* Footer */}
           <div style={styles.footer}>
             <button
               className="sm-cancel"
