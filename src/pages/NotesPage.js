@@ -532,7 +532,7 @@ function NoteModal({ note, onClose, onSave }) {
               setError("");
             }}
             placeholder="// write your note here..."
-            rows={7}
+            rows={9}
             className="notes-input"
             style={{
               resize: "vertical",
