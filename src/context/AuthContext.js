@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import api from "../utils/api";
-import toast from "react-hot-toast";
+import StatusBanner from "../components/StatusBanner";
 
 const AuthContext = createContext();
 
@@ -13,6 +13,7 @@ const getStoredToken = () =>
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [banner, setBanner] = useState(null);
 
   useEffect(() => {
     const token = getStoredToken();
@@ -47,18 +48,16 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     const res = await api.post("/auth/register", { name, email, password });
-    localStorage.setItem(TOKEN_KEY, res.token); // registration always remembers
-    api.defaults.headers.common["Authorization"] = `Bearer ${res.token}`;
-    setUser(res.user);
+    // don't setUser here — let them log in manually after registering
     return res.user;
   };
 
-  const logout = () => {
+  const logout = (navigate) => {
     localStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
     delete api.defaults.headers.common["Authorization"];
     setUser(null);
-    toast.success("Logged out");
+    navigate("/login", { state: { justLoggedOut: true } }); // ← pass state
   };
 
   const updateProfile = async (data) => {

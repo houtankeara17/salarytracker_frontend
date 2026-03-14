@@ -6,6 +6,8 @@ import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { formatDate } from "../../utils/khmerUtils";
 import FloatingCalculator from "../FloatingCalculator"; // 👈 import
+import StatusBanner from "../StatusBanner";
+import { useNavigate } from "react-router-dom";
 
 const navItems = [
   { path: "/dashboard", icon: "📊", key: "dashboard" },
@@ -25,6 +27,8 @@ export default function Layout({ children }) {
     useApp();
   const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
+  const [banner, setBanner] = useState(null);
+  const navigate = useNavigate();
 
   return (
     <div
@@ -167,7 +171,7 @@ export default function Layout({ children }) {
           {/* Logout */}
           <button
             className="btn btn-secondary w-full justify-center text-xs py-2 mt-1"
-            onClick={logout}
+            onClick={() => logout(navigate)}
           >
             🚪 {t("logout")}
           </button>
@@ -250,7 +254,7 @@ export default function Layout({ children }) {
                   </NavLink>
                   <button
                     onClick={() => {
-                      logout();
+                      logout(navigate);
                       setShowMenu(false);
                     }}
                     className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -268,6 +272,7 @@ export default function Layout({ children }) {
 
       {/* ── Floating Calculator — persists across ALL pages 🧮 ── */}
       <FloatingCalculator />
+      <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
     </div>
   );
 }

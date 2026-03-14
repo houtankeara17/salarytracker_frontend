@@ -1,10 +1,10 @@
 // src/pages/ExpensesPage.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { expenseAPI } from "../utils/api";
 import ExpenseModal from "../components/modals/ExpenseModal";
 import DeleteModal from "../components/modals/DeleteModal";
-import toast from "react-hot-toast";
+import StatusBanner from "../components/StatusBanner";
 import { formatDate } from "../utils/khmerUtils";
 
 const CATEGORIES = [
@@ -34,10 +34,8 @@ const MONTHS_EN = [
   "November",
   "December",
 ];
-
 const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 30, "All"];
 
-// ── View toggle icons ──────────────────────────────────────────────────────────
 const IconTable = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
     <rect
@@ -158,7 +156,6 @@ const IconRow = () => (
     />
   </svg>
 );
-
 const VIEW_MODES = [
   { key: "box", label: "Box", Icon: IconBox },
   { key: "table", label: "Table", Icon: IconTable },
@@ -178,11 +175,17 @@ export default function ExpensesPage() {
   const [filterYear, setFilterYear] = useState("");
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState("box");
-
-  // ── Pagination state ────────────────────────────────────────────────────────
-  const [pageSize, setPageSize] = useState(10); // number | "All"
+  const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [banner, setBanner] = useState(null);
 
+  // Ref so handleModalSuccess always reads latest editData (avoids stale closure)
+  const editDataRef = useRef(editData);
+  useEffect(() => {
+    editDataRef.current = editData;
+  }, [editData]);
+
+  // ── Fetch from server (only on mount + filter change) ───────────────────
   const loadExpenses = async () => {
     setLoading(true);
     try {
@@ -195,7 +198,7 @@ export default function ExpensesPage() {
       const res = await expenseAPI.getAll(params);
       setExpenses(res.data || []);
     } catch (err) {
-      toast.error(err.message);
+      setBanner({ type: "error", title: err.message });
     } finally {
       setLoading(false);
     }
@@ -204,33 +207,50 @@ export default function ExpensesPage() {
   useEffect(() => {
     loadExpenses();
   }, [filterCat, filterMonth, filterYear]);
-
-  // Reset to page 1 whenever filters / search / pageSize change
   useEffect(() => {
     setCurrentPage(1);
   }, [filterCat, filterMonth, filterYear, search, pageSize]);
 
+  // ── ADD / UPDATE without reload ─────────────────────────────────────────
+  const handleModalSuccess = (savedItem) => {
+    if (!savedItem) {
+      loadExpenses();
+      return;
+    }
+    if (editDataRef.current) {
+      // UPDATE: replace in place
+      setExpenses((prev) =>
+        prev.map((e) => (e._id === savedItem._id ? savedItem : e)),
+      );
+      setBanner({ type: "update", title: t("updatedSuccess") });
+    } else {
+      // ADD: prepend
+      setExpenses((prev) => [savedItem, ...prev]);
+      setCurrentPage(1);
+      setBanner({ type: "success", title: t("addedSuccess") });
+    }
+  };
+
+  // ── DELETE without reload ───────────────────────────────────────────────
   const handleDelete = async () => {
     setDeleting(true);
     try {
       await expenseAPI.delete(deleteId);
-      toast.success(t("deletedSuccess"));
+      setBanner({ type: "success", title: t("deletedSuccess") });
+      setExpenses((prev) => prev.filter((e) => e._id !== deleteId));
       setDeleteId(null);
-      loadExpenses();
     } catch (err) {
-      toast.error(err.message);
+      setBanner({ type: "error", title: "Failed to load", sub: err.message });
     } finally {
       setDeleting(false);
     }
   };
 
-  // ── Filtering ───────────────────────────────────────────────────────────────
+  // ── Filtering + pagination ──────────────────────────────────────────────
   const filtered = expenses.filter(
     (e) => !search || e.itemName?.toLowerCase().includes(search.toLowerCase()),
   );
   const totalUSD = filtered.reduce((s, e) => s + (e.amountUSD || 0), 0);
-
-  // ── Pagination logic ────────────────────────────────────────────────────────
   const isAll = pageSize === "All";
   const totalItems = filtered.length;
   const totalPages = isAll ? 1 : Math.max(1, Math.ceil(totalItems / pageSize));
@@ -243,14 +263,12 @@ export default function ExpensesPage() {
   const goPrev = () => goTo(safePage - 1);
   const goNext = () => goTo(safePage + 1);
 
-  // Generate page numbers with ellipsis
   const getPageNumbers = () => {
     if (totalPages <= 7)
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     const pages = [];
-    if (safePage <= 4) {
-      pages.push(1, 2, 3, 4, 5, "…", totalPages);
-    } else if (safePage >= totalPages - 3) {
+    if (safePage <= 4) pages.push(1, 2, 3, 4, 5, "…", totalPages);
+    else if (safePage >= totalPages - 3)
       pages.push(
         1,
         "…",
@@ -260,36 +278,35 @@ export default function ExpensesPage() {
         totalPages - 1,
         totalPages,
       );
-    } else {
+    else
       pages.push(1, "…", safePage - 1, safePage, safePage + 1, "…", totalPages);
-    }
     return pages;
   };
 
-  // ── Shared action buttons ──────────────────────────────────────────────────
+  // ── Shared action buttons ───────────────────────────────────────────────
   const ActionBtns = ({ e }) => (
     <div className="flex gap-1">
       <button
         className="btn btn-ghost p-2 text-sm"
+        title={t("edit")}
         onClick={() => {
           setEditData(e);
           setAddModal(true);
         }}
-        title={t("edit")}
       >
         ✏️
       </button>
       <button
         className="btn btn-ghost p-2 text-sm"
-        onClick={() => setDeleteId(e._id)}
         title={t("delete")}
+        onClick={() => setDeleteId(e._id)}
       >
         🗑️
       </button>
     </div>
   );
 
-  // ── TABLE VIEW ─────────────────────────────────────────────────────────────
+  // ── TABLE VIEW ──────────────────────────────────────────────────────────
   const TableView = () => (
     <div className="overflow-x-auto">
       <table
@@ -442,7 +459,7 @@ export default function ExpensesPage() {
     </div>
   );
 
-  // ── BOX / CARD VIEW ────────────────────────────────────────────────────────
+  // ── BOX VIEW ────────────────────────────────────────────────────────────
   const BoxView = () => (
     <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {paginated.map((e) => (
@@ -563,7 +580,7 @@ export default function ExpensesPage() {
     </div>
   );
 
-  // ── ROW VIEW ───────────────────────────────────────────────────────────────
+  // ── ROW VIEW ────────────────────────────────────────────────────────────
   const RowView = () => (
     <div style={{ borderTop: "1px solid var(--border)" }}>
       {paginated.map((e) => (
@@ -653,13 +670,11 @@ export default function ExpensesPage() {
     </div>
   );
 
-  // ── PAGINATION BAR ─────────────────────────────────────────────────────────
+  // ── PAGINATION BAR ──────────────────────────────────────────────────────
   const PaginationBar = () => {
     if (totalItems === 0) return null;
-
     const rangeStart = isAll ? 1 : startIdx + 1;
     const rangeEnd = isAll ? totalItems : endIdx;
-
     return (
       <div
         className="flex items-center justify-between flex-wrap gap-3 px-4 py-3"
@@ -668,7 +683,6 @@ export default function ExpensesPage() {
           background: "var(--bg-primary)",
         }}
       >
-        {/* Left: showing X–Y of Z + page size selector */}
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
             Showing{" "}
@@ -680,8 +694,6 @@ export default function ExpensesPage() {
               {totalItems}
             </strong>
           </span>
-
-          {/* Per-page selector */}
           <div className="flex items-center gap-1">
             <span
               className="text-xs"
@@ -718,7 +730,7 @@ export default function ExpensesPage() {
                         ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)"
                         : "transparent",
                       boxShadow: active
-                        ? "0 2px 6px rgba(99, 102, 241, 0.3)"
+                        ? "0 2px 6px rgba(99,102,241,0.3)"
                         : "none",
                     }}
                   >
@@ -729,11 +741,8 @@ export default function ExpensesPage() {
             </div>
           </div>
         </div>
-
-        {/* Right: Prev / page numbers / Next */}
         {!isAll && totalPages > 1 && (
           <div className="flex items-center gap-1">
-            {/* Prev */}
             <button
               onClick={goPrev}
               disabled={safePage === 1}
@@ -757,7 +766,7 @@ export default function ExpensesPage() {
               }}
               onMouseEnter={(ev) => {
                 if (safePage !== 1)
-                  ev.currentTarget.style.borderColor = "#6366f1 ";
+                  ev.currentTarget.style.borderColor = "#6366f1";
               }}
               onMouseLeave={(ev) => {
                 ev.currentTarget.style.borderColor = "var(--border)";
@@ -765,12 +774,10 @@ export default function ExpensesPage() {
             >
               ← Prev
             </button>
-
-            {/* Page numbers */}
             {getPageNumbers().map((p, i) =>
               p === "…" ? (
                 <span
-                  key={`ellipsis-${i}`}
+                  key={`e-${i}`}
                   style={{
                     padding: "5px 4px",
                     fontSize: "12px",
@@ -799,12 +806,12 @@ export default function ExpensesPage() {
                         : "var(--bg-secondary)",
                     boxShadow:
                       safePage === p
-                        ? "0 2px 8px rgba(99, 102, 241, 0.35)"
+                        ? "0 2px 8px rgba(99,102,241,0.35)"
                         : "none",
                   }}
                   onMouseEnter={(ev) => {
                     if (safePage !== p)
-                      ev.currentTarget.style.borderColor = "#6366f1 ";
+                      ev.currentTarget.style.borderColor = "#6366f1";
                   }}
                   onMouseLeave={(ev) => {
                     if (safePage !== p)
@@ -815,8 +822,6 @@ export default function ExpensesPage() {
                 </button>
               ),
             )}
-
-            {/* Next */}
             <button
               onClick={goNext}
               disabled={safePage === totalPages}
@@ -854,7 +859,7 @@ export default function ExpensesPage() {
     );
   };
 
-  // ── RENDER ─────────────────────────────────────────────────────────────────
+  // ── RENDER ──────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Header */}
@@ -934,9 +939,9 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* Main card with view toggle header */}
+      {/* Main card */}
       <div className="card overflow-hidden">
-        {/* ── View toggle bar ── */}
+        {/* View toggle bar */}
         <div
           className="flex items-center justify-between px-4 py-3"
           style={{
@@ -950,7 +955,6 @@ export default function ExpensesPage() {
           >
             {formatNum(filtered.length)} {t("items")}
           </span>
-
           <div
             className="flex items-center gap-0.5 p-1 rounded-lg"
             style={{
@@ -993,7 +997,7 @@ export default function ExpensesPage() {
           </div>
         </div>
 
-        {/* ── Content area ── */}
+        {/* Content */}
         {loading ? (
           <div
             className="p-8 text-center text-sm"
@@ -1021,6 +1025,7 @@ export default function ExpensesPage() {
         )}
       </div>
 
+      {/* ── KEY CHANGE: onSuccess={handleModalSuccess} not onSuccess={loadExpenses} ── */}
       <ExpenseModal
         isOpen={addModal}
         onClose={() => {
@@ -1028,7 +1033,7 @@ export default function ExpensesPage() {
           setEditData(null);
         }}
         editData={editData}
-        onSuccess={loadExpenses}
+        onSuccess={handleModalSuccess}
       />
       <DeleteModal
         isOpen={!!deleteId}
@@ -1036,6 +1041,8 @@ export default function ExpensesPage() {
         onConfirm={handleDelete}
         loading={deleting}
       />
+
+      <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
     </div>
   );
 }

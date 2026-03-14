@@ -10,8 +10,8 @@ import axios from "axios";
 const api = axios.create({
   baseURL:
     process.env.REACT_APP_API_URL ||
-    "https://salarytracker-backend.onrender.com/api",
-  //"http://localhost:5001/api",
+    // "https://salarytracker-backend.onrender.com/api",
+    "http://localhost:5001/api",
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
@@ -40,8 +40,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
+    const isAuthRoute =
+      window.location.pathname === "/login" ||
+      window.location.pathname === "/register";
+
+    if (error.response?.status === 401 && !isAuthRoute) {
+      // ← skip on auth pages
       localStorage.removeItem("mt_token");
+      sessionStorage.removeItem("mt_token");
       delete api.defaults.headers.common["Authorization"];
       window.location.href = "/login";
     }

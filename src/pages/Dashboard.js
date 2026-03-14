@@ -6,6 +6,8 @@ import { dashboardAPI } from "../utils/api";
 import CalendarModal from "../components/modals/CalendarModal";
 import ExpenseModal from "../components/modals/ExpenseModal";
 import { formatDate } from "../utils/khmerUtils";
+import StatusBanner from "../components/StatusBanner";
+import { useLocation } from "react-router-dom";
 
 /* ─────────────────────────────────────────────────────
    Constants
@@ -183,10 +185,21 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [calModal, setCalModal] = useState({ open: false, view: "monthly" });
   const [addExpense, setAddExpense] = useState(false);
+  const [banner, setBanner] = useState(null); // ← add
 
   const today = new Date();
   const [navMonth, setNavMonth] = useState(today.getMonth());
   const [navYear, setNavYear] = useState(today.getFullYear());
+
+  // inside Dashboard():
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.justLoggedIn) {
+      setBanner({ type: "success", title: t("loginSuccess") });
+      window.history.replaceState({}, ""); // clear state so it doesn't show again on refresh
+    }
+  }, []);
 
   const isCurrentMonth =
     navMonth === today.getMonth() && navYear === today.getFullYear();
@@ -220,7 +233,7 @@ export default function Dashboard() {
         });
         setData(res.data);
       } catch (err) {
-        console.error(err);
+        setBanner({ type: "error", title: "Failed to load", sub: err.message });
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -275,6 +288,7 @@ export default function Dashboard() {
             />
           ))}
         </div>
+        <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
       </div>
     );
 
@@ -354,7 +368,6 @@ export default function Dashboard() {
           + {t("addNew")}
         </button>
       </div>
-
       {/* Salary & Budget */}
       <div
         className="dash-glass-card dash-section"
@@ -482,7 +495,6 @@ export default function Dashboard() {
           </>
         )}
       </div>
-
       {/* Stat cards */}
       {hasData && (
         <div
@@ -512,7 +524,6 @@ export default function Dashboard() {
           ))}
         </div>
       )}
-
       {/* Plans + Category */}
       {hasData && (
         <div
@@ -706,7 +717,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
       <CalendarModal
         isOpen={calModal.open}
         onClose={() => setCalModal({ open: false, view: "monthly" })}
@@ -718,9 +728,12 @@ export default function Dashboard() {
         editData={null}
         onSuccess={() => {
           setAddExpense(false);
+          setBanner({ type: "success", title: t("addedSuccess") });
           loadData(true);
-        }} // ← silent=true
+        }}
       />
+      <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />{" "}
+      {/* ← add */}
     </div>
   );
 }

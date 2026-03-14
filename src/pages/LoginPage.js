@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useApp } from "../context/AppContext";
-import toast from "react-hot-toast";
+import StatusBanner from "../components/StatusBanner";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -12,28 +12,50 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(false); // ✅ added
-
+  const [banner, setBanner] = useState(null); // ✅ banner state
+  const location = useLocation();
   const kh = language === "kh";
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (location.state?.justLoggedOut) {
+      setBanner({
+        type: "success",
+        title: kh ? "អ្នកបានចេញរួចហើយ" : "Logged out successfully",
+      });
+      window.history.replaceState({}, "");
+    }
+    if (location.state?.justRegistered) {
+      setBanner({
+        type: "success",
+        title: kh
+          ? "ចុះឈ្មោះដោយជោគជ័យ! សូមចូលប្រើប្រាស់"
+          : "Registered! Please sign in",
+      });
+      window.history.replaceState({}, "");
+    }
+  }, []);
+
+  const handleSubmit = async () => {
     if (!form.email || !form.password) {
-      toast.error(
-        kh
+      setBanner({
+        type: "error",
+        title: kh
           ? "សូមបំពេញអ៊ីម៉ែល និងពាក្យសម្ងាត់"
           : "Please fill in email and password",
-      );
+      });
+      console.log("handleSubmit called");
       return;
     }
     setLoading(true);
     try {
-      await login(form.email, form.password, rememberMe); // ✅ pass rememberMe
-      toast.success(kh ? "ចូលប្រើប្រាស់ដោយជោគជ័យ!" : "Logged in successfully!");
-      navigate("/dashboard");
+      await login(form.email, form.password, rememberMe);
+      navigate("/dashboard", { state: { justLoggedIn: true } }); // ← pass state
     } catch (err) {
-      toast.error(
-        err.message || (kh ? "ព័ត៌មានមិនត្រឹមត្រូវ" : "Invalid credentials"),
-      );
+      setBanner({
+        type: "error",
+        title:
+          err.message || (kh ? "ព័ត៌មានមិនត្រឹមត្រូវ" : "Invalid credentials"),
+      });
     } finally {
       setLoading(false);
     }
@@ -47,7 +69,7 @@ export default function LoginPage() {
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
           className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-10"
-          style={{ background: "linear-gradient(135deg,#0ea5e9,#38bdf8)" }}
+          style={{ background: "linear-gradient(135deg,#6366f1,#818cf8)" }}
         />
         <div
           className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full opacity-10"
@@ -76,7 +98,7 @@ export default function LoginPage() {
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4"
               style={{
-                background: "linear-gradient(135deg,#0ea5e9,#0284c7)",
+                background: "linear-gradient(135deg,#6366f1,#818cf8)",
                 boxShadow: "0 8px 24px rgba(14,165,233,0.3)",
               }}
             >
@@ -96,11 +118,17 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form
+            className="space-y-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
             <div>
               <label className="form-label">{kh ? "អ៊ីម៉ែល" : "Email"}</label>
               <input
-                type="email"
+                type="email" // ← was type="email"
                 value={form.email}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, email: e.target.value }))
@@ -145,7 +173,7 @@ export default function LoginPage() {
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 cursor-pointer rounded"
-                style={{ accentColor: "#0ea5e9" }}
+                style={{ accentColor: "#6366f1" }}
               />
               <label
                 htmlFor="rememberMe"
@@ -179,13 +207,15 @@ export default function LoginPage() {
             <Link
               to="/register"
               className="font-bold"
-              style={{ color: "#0ea5e9" }}
+              style={{ color: "#6366f1" }}
             >
               {kh ? "ចុះឈ្មោះ" : "Register"}
             </Link>
           </div>
         </div>
       </div>
+      {/* ✅ Status Banner */}
+      <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
     </div>
   );
 }

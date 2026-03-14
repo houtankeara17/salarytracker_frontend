@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "../../context/AppContext";
 import { expenseAPI } from "../../utils/api";
-import toast from "react-hot-toast";
 import KhmerDateInput from "../KhmerDateInput";
+import StatusBanner from "../StatusBanner";
 
 const CATEGORIES = [
   { value: "food", emoji: "🍚" },
@@ -72,11 +72,7 @@ const styles = {
     justifyContent: "space-between",
     flexShrink: 0,
   },
-  headerLeft: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-  },
+  headerLeft: { display: "flex", alignItems: "center", gap: "10px" },
   iconWrap: {
     width: "36px",
     height: "36px",
@@ -133,11 +129,7 @@ const styles = {
     alignItems: "center",
     gap: "4px",
   },
-  req: {
-    color: "#6366f1",
-    fontSize: "13px",
-    lineHeight: 1,
-  },
+  req: { color: "#6366f1", fontSize: "13px", lineHeight: 1 },
   input: {
     width: "100%",
     background: "rgba(255,255,255,0.04)",
@@ -151,11 +143,7 @@ const styles = {
     outline: "none",
     fontFamily: "inherit",
   },
-  row: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "12px",
-  },
+  row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" },
   catGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
@@ -175,17 +163,6 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     marginTop: "8px",
-  },
-  previewLabel: {
-    fontSize: "11px",
-    color: "#666",
-    fontWeight: 500,
-  },
-  previewValue: {
-    fontSize: "16px",
-    fontWeight: 700,
-    color: "#818cf8",
-    letterSpacing: "-0.5px",
   },
   footer: {
     padding: "16px 24px 20px",
@@ -224,11 +201,23 @@ const styles = {
   },
 };
 
+// Tries every known API response shape to extract the saved item
+const extractItem = (res) => {
+  if (!res) return null;
+  const d = res?.data;
+  if (d && typeof d === "object" && d._id) return d; // res.data is the item
+  if (d?.data?._id) return d.data; // res.data.data
+  if (d?.expense?._id) return d.expense; // res.data.expense
+  if (res?._id) return res; // res itself
+  return null;
+};
+
 export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
   const { t, language } = useApp();
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
   const [qrPreview, setQrPreview] = useState(null);
+  const [banner, setBanner] = useState(null); // ← add
 
   useEffect(() => {
     if (editData) {
@@ -287,31 +276,31 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
     return null;
   };
 
+  // ── FIXED: capture res and pass saved item to onSuccess ─────────────────
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
-      toast.error(error);
+      setBanner({ type: "error", title: error });
       return;
     }
     setLoading(true);
     try {
       if (editData) {
-        await expenseAPI.update(editData._id, form);
-        toast.success(t("updatedSuccess"));
+        const res = await expenseAPI.update(editData._id, form);
+        const saved = extractItem(res) || { ...editData, ...form };
+        onSuccess(saved); // ← parent handles the banner
       } else {
-        await expenseAPI.create(form);
-        toast.success(t("addedSuccess"));
+        const res = await expenseAPI.create(form);
+        onSuccess(extractItem(res)); // ← parent handles the banner
       }
-      onSuccess();
       onClose();
     } catch (err) {
-      toast.error(err.message);
+      setBanner({ type: "error", title: "Failed", sub: err.message });
     } finally {
       setLoading(false);
     }
   };
 
-  // Compute live total preview
   const totalPreview = () => {
     const amt = Number(form.amount) || 0;
     const qty = Number(form.quantity) || 1;
@@ -348,7 +337,7 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
 
       <div style={styles.overlay} onClick={onClose}>
         <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-          {/* ── Header ── */}
+          {/* Header */}
           <div style={styles.header}>
             <div style={styles.headerLeft}>
               <div style={styles.iconWrap}>💸</div>
@@ -370,7 +359,7 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
             </button>
           </div>
 
-          {/* ── Body ── */}
+          {/* Body */}
           <div className="em-body" style={styles.body}>
             {/* Date + Item Name */}
             <div style={styles.row}>
@@ -480,7 +469,6 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                 {t("amount")} <span style={styles.req}>*</span>
               </div>
               <div style={styles.row}>
-                {/* Amount input with prefix */}
                 <div style={{ position: "relative" }}>
                   <span
                     style={{
@@ -508,8 +496,6 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                     placeholder="0.00"
                   />
                 </div>
-
-                {/* Currency toggle */}
                 <div style={{ display: "flex", gap: "6px" }}>
                   {["USD", "KHR"].map((c) => (
                     <button
@@ -545,15 +531,26 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                   ))}
                 </div>
               </div>
-
-              {/* Live preview */}
               <div style={styles.amountPreview}>
-                <span style={styles.previewLabel}>Total Preview</span>
-                <span style={styles.previewValue}>{totalPreview()}</span>
+                <span
+                  style={{ fontSize: "11px", color: "#666", fontWeight: 500 }}
+                >
+                  Total Preview
+                </span>
+                <span
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "#818cf8",
+                    letterSpacing: "-0.5px",
+                  }}
+                >
+                  {totalPreview()}
+                </span>
               </div>
             </div>
 
-            {/* Exchange Rate (KHR only) */}
+            {/* Exchange Rate */}
             {form.currency === "KHR" && (
               <div>
                 <div style={styles.label}>
@@ -688,7 +685,7 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
             </div>
           </div>
 
-          {/* ── Footer ── */}
+          {/* Footer */}
           <div style={styles.footer}>
             <button
               className="em-cancel-btn"
