@@ -1,7 +1,7 @@
 // src/components/modals/SalaryModal.js
 import React, { useState, useEffect } from "react";
 import { useApp } from "../../context/AppContext";
-import toast from "react-hot-toast";
+import StatusBanner from "../StatusBanner";
 
 const MONTHS_EN = [
   "January",
@@ -200,6 +200,7 @@ export default function SalaryModal({
   const { t } = useApp();
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
+  const [banner, setBanner] = useState(null);
 
   useEffect(() => {
     if (editData) {
@@ -221,26 +222,29 @@ export default function SalaryModal({
 
   const handleSubmit = async () => {
     if (!form.amount) {
-      toast.error("Amount is required");
+      setBanner({ type: "error", title: "Amount is required" }); // ← was toast.error
       return;
     }
     setLoading(true);
     try {
       if (editData) {
         const res = await apiCall.update(editData._id, form);
-        toast.success(t("updatedSuccess"));
-        // extractItem tries all shapes; if API returns nothing, merge form into editData
+        setBanner({ type: "update", title: t("updatedSuccess") }); // ← was toast.success
         const saved = extractItem(res) || { ...editData, ...form };
-        onSuccess(saved); // ← always passes the item, never null for update
+        onSuccess(saved);
       } else {
         const res = await apiCall.create(form);
-        toast.success(t("addedSuccess"));
+        setBanner({ type: "success", title: t("addedSuccess") }); // ← was toast.success
         const saved = extractItem(res);
-        onSuccess(saved); // ← passes item if API returns it, null triggers fallback load()
+        onSuccess(saved);
       }
       onClose();
     } catch (err) {
-      toast.error(err.message);
+      setBanner({
+        type: "error",
+        title: "Something went wrong",
+        sub: err.message,
+      }); // ← was wrong type
     } finally {
       setLoading(false);
     }
@@ -476,6 +480,7 @@ export default function SalaryModal({
           </div>
         </div>
       </div>
+      <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
     </>
   );
 }

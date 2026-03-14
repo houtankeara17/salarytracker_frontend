@@ -4,7 +4,7 @@ import { useApp } from "../context/AppContext";
 import { salaryAPI } from "../utils/api";
 import SalaryModal from "../components/modals/SalaryModal";
 import DeleteModal from "../components/modals/DeleteModal";
-import toast from "react-hot-toast";
+import StatusBanner from "../components/StatusBanner";
 
 const YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031];
 
@@ -17,6 +17,7 @@ export default function SalaryPage() {
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [filterYear, setFilterYear] = useState("");
+  const [banner, setBanner] = useState(null);
 
   // Keep a ref to editData so handleModalSuccess always reads the latest value
   // (avoids stale closure issue)
@@ -34,7 +35,7 @@ export default function SalaryPage() {
       );
       setItems(res.data || []);
     } catch (err) {
-      toast.error(err.message);
+      setBanner({ type: "error", title: "Failed to load", sub: err.message });
     } finally {
       setLoading(false);
     }
@@ -47,19 +48,18 @@ export default function SalaryPage() {
   // ── ADD / UPDATE without reload ─────────────────────────────────────────
   const handleModalSuccess = (savedItem) => {
     if (!savedItem) {
-      // API returned nothing — last resort fallback
       load();
       return;
     }
     const isEdit = !!editDataRef.current;
     if (isEdit) {
-      // UPDATE: replace the old card in place, no flicker
       setItems((prev) =>
         prev.map((i) => (i._id === savedItem._id ? savedItem : i)),
       );
+      setBanner({ type: "update", title: t("updatedSuccess") }); // ← add
     } else {
-      // ADD: put new card at the top instantly
       setItems((prev) => [savedItem, ...prev]);
+      setBanner({ type: "success", title: t("addedSuccess") }); // ← add
     }
   };
 
@@ -68,11 +68,11 @@ export default function SalaryPage() {
     setDeleting(true);
     try {
       await salaryAPI.delete(deleteId);
-      toast.success(t("deletedSuccess"));
+      setBanner({ type: "delete", title: t("deletedSuccess") }); // ← was toast.success
       setItems((prev) => prev.filter((i) => i._id !== deleteId));
       setDeleteId(null);
     } catch (err) {
-      toast.error(err.message);
+      setBanner({ type: "error", title: "Delete failed", sub: err.message }); // ← was toast.error
     } finally {
       setDeleting(false);
     }
@@ -227,6 +227,7 @@ export default function SalaryPage() {
         onConfirm={handleDelete}
         loading={deleting}
       />
+      <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
     </div>
   );
 }

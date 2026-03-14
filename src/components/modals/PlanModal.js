@@ -1,7 +1,7 @@
 // src/components/modals/PlanModal.js
 import React, { useState, useEffect } from "react";
 import { useApp } from "../../context/AppContext";
-import toast from "react-hot-toast";
+import StatusBanner from "../StatusBanner";
 import KhmerDateInput from "../KhmerDateInput";
 
 const defaultForm = {
@@ -83,11 +83,7 @@ const styles = {
     justifyContent: "space-between",
     flexShrink: 0,
   },
-  headerLeft: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-  },
+  headerLeft: { display: "flex", alignItems: "center", gap: "10px" },
   iconWrap: {
     width: "38px",
     height: "38px",
@@ -146,11 +142,7 @@ const styles = {
     alignItems: "center",
     gap: "4px",
   },
-  req: {
-    color: "#6366f1",
-    fontSize: "13px",
-    lineHeight: 1,
-  },
+  req: { color: "#6366f1", fontSize: "13px", lineHeight: 1 },
   input: {
     width: "100%",
     background: "rgba(255,255,255,0.04)",
@@ -164,11 +156,7 @@ const styles = {
     outline: "none",
     fontFamily: "inherit",
   },
-  row: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "12px",
-  },
+  row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" },
   progressBar: {
     height: "5px",
     borderRadius: "999px",
@@ -212,6 +200,23 @@ const styles = {
   },
 };
 
+// Tries every known API response shape to extract the saved item
+const extractItem = (res) => {
+  if (!res) return null;
+  const d = res?.data;
+  if (d && typeof d === "object" && d._id) return d;
+  if (d?.data?._id) return d.data;
+  if (d?.plan?._id) return d.plan;
+  if (d?.travel?._id) return d.travel;
+  if (d?.goal?._id) return d.goal;
+  if (d?.giving?._id) return d.giving;
+  if (d?.other?._id) return d.other;
+  if (d?.debt?._id) return d.debt;
+  if (d?.loan?._id) return d.loan;
+  if (res?._id) return res;
+  return null;
+};
+
 export default function PlanModal({
   isOpen,
   onClose,
@@ -224,7 +229,11 @@ export default function PlanModal({
   const { t } = useApp();
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
+  const [banner, setBanner] = useState(null); // ✅ banner state
 
+  const showBanner = (type, title, sub) => setBanner({ type, title, sub }); // ✅ helper
+
+  // Reset form and clear banner whenever modal opens or editData changes
   useEffect(() => {
     if (editData) {
       setForm({
@@ -246,6 +255,7 @@ export default function PlanModal({
     } else {
       setForm(defaultForm);
     }
+    setBanner(null); // ✅ clear old banner on reopen
   }, [editData, isOpen]);
 
   const handleChange = (e) =>
@@ -253,22 +263,42 @@ export default function PlanModal({
 
   const handleSubmit = async () => {
     if (!form.title || !form.targetAmount) {
-      toast.error("Title and target amount are required");
+      showBanner(
+        "error",
+        "Missing required fields",
+        "Title and target amount are required",
+      );
       return;
     }
     setLoading(true);
+    showBanner("loading", "Saving your plan...", "Please wait a moment");
     try {
       if (editData) {
-        await apiCall.update(editData._id, form);
-        toast.success(t("updatedSuccess"));
+        const res = await apiCall.update(editData._id, form);
+        const saved = extractItem(res) || { ...editData, ...form };
+        showBanner(
+          "update",
+          t("updatedSuccess"),
+          "Your changes have been saved",
+        );
+        setTimeout(() => {
+          onSuccess(saved);
+          onClose();
+        }, 1200);
       } else {
-        await apiCall.create(form);
-        toast.success(t("addedSuccess"));
+        const res = await apiCall.create(form);
+        showBanner(
+          "success",
+          t("addedSuccess"),
+          "Your new plan has been saved",
+        );
+        setTimeout(() => {
+          onSuccess(extractItem(res));
+          onClose();
+        }, 1200);
       }
-      onSuccess();
-      onClose();
     } catch (err) {
-      toast.error(err.message);
+      showBanner("error", "Something went wrong", err.message);
     } finally {
       setLoading(false);
     }
@@ -290,7 +320,6 @@ export default function PlanModal({
   const targetVal = Number(form.targetAmount) || 0;
   const progressPct =
     targetVal > 0 ? Math.min(100, (progressVal / targetVal) * 100) : 0;
-  const currentStatus = STATUS_CONFIG[form.status] || STATUS_CONFIG.planned;
 
   return (
     <>
@@ -327,7 +356,7 @@ export default function PlanModal({
 
       <div style={styles.overlay} onClick={onClose}>
         <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-          {/* ── Header ── */}
+          {/* Header */}
           <div style={styles.header}>
             <div style={styles.headerLeft}>
               <div style={styles.iconWrap}>{config?.icon || "📋"}</div>
@@ -347,8 +376,11 @@ export default function PlanModal({
             </button>
           </div>
 
-          {/* ── Body ── */}
+          {/* Body */}
           <div className="pm-body" style={styles.body}>
+            {/* ✅ StatusBanner — always first child */}
+            <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
+
             {/* Title */}
             <div>
               <div style={styles.label}>
@@ -413,13 +445,12 @@ export default function PlanModal({
               </div>
             )}
 
-            {/* Target + Progress amounts */}
+            {/* Target Amount + Progress Field */}
             <div>
               <div style={styles.label}>
                 {t("targetAmount")} <span style={styles.req}>*</span>
               </div>
               <div style={styles.row}>
-                {/* Target with prefix */}
                 <div style={{ position: "relative" }}>
                   <span
                     style={{
@@ -447,8 +478,6 @@ export default function PlanModal({
                     placeholder="0.00"
                   />
                 </div>
-
-                {/* Progress amount */}
                 <div style={{ position: "relative" }}>
                   <span
                     style={{
@@ -477,8 +506,6 @@ export default function PlanModal({
                   />
                 </div>
               </div>
-
-              {/* Progress bar */}
               {targetVal > 0 && (
                 <div style={{ marginTop: "10px" }}>
                   <div
@@ -522,7 +549,7 @@ export default function PlanModal({
               )}
             </div>
 
-            {/* Currency toggle */}
+            {/* Currency */}
             <div>
               <div style={styles.label}>{t("currency")}</div>
               <div style={{ display: "flex", gap: "6px" }}>
@@ -554,7 +581,7 @@ export default function PlanModal({
               </div>
             </div>
 
-            {/* Exchange Rate (KHR only) */}
+            {/* Exchange Rate */}
             {form.currency === "KHR" && (
               <div>
                 <div style={styles.label}>
@@ -643,7 +670,7 @@ export default function PlanModal({
               </div>
             )}
 
-            {/* Single Date */}
+            {/* Date */}
             {config?.hasDate && (
               <div>
                 <div style={styles.label}>{t("date")}</div>
@@ -671,7 +698,7 @@ export default function PlanModal({
             </div>
           </div>
 
-          {/* ── Footer ── */}
+          {/* Footer */}
           <div style={styles.footer}>
             <button
               className="pm-cancel"
