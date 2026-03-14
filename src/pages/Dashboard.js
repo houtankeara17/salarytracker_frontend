@@ -180,6 +180,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [calModal, setCalModal] = useState({ open: false, view: "monthly" });
   const [addExpense, setAddExpense] = useState(false);
 
@@ -208,21 +209,25 @@ export default function Dashboard() {
       return p + 1;
     });
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await dashboardAPI.getSummary({
-        month: navMonth + 1,
-        year: navYear,
-      });
-      console.log("month:", navMonth + 1, "year:", navYear, "data:", res.data);
-      setData(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [navMonth, navYear]);
+  const loadData = useCallback(
+    async (silent = false) => {
+      if (silent) setRefreshing(true);
+      else setLoading(true);
+      try {
+        const res = await dashboardAPI.getSummary({
+          month: navMonth + 1,
+          year: navYear,
+        });
+        setData(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [navMonth, navYear],
+  );
 
   useEffect(() => {
     loadData();
@@ -710,7 +715,11 @@ export default function Dashboard() {
       <ExpenseModal
         isOpen={addExpense}
         onClose={() => setAddExpense(false)}
-        onSuccess={loadData}
+        editData={null}
+        onSuccess={() => {
+          setAddExpense(false);
+          loadData(true);
+        }} // ← silent=true
       />
     </div>
   );
