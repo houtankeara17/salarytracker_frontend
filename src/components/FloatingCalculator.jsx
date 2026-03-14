@@ -29,7 +29,6 @@ function formatDisplay(raw) {
   return formattedInt;
 }
 
-// detect small screen
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => window.innerWidth < 480);
   useEffect(() => {
@@ -40,26 +39,49 @@ function useIsMobile() {
   return mobile;
 }
 
+function CalcIcon({ size = 20 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="4" y="3" width="16" height="18" rx="3" />
+      <line x1="8" y1="8" x2="10" y2="8" />
+      <line x1="14" y1="8" x2="16" y2="8" />
+      <line x1="8" y1="12" x2="10" y2="12" />
+      <line x1="14" y1="12" x2="16" y2="12" />
+      <line x1="8" y1="16" x2="10" y2="16" />
+      <line x1="14" y1="16" x2="16" y2="19" />
+      <line x1="14" y1="19" x2="16" y2="16" />
+    </svg>
+  );
+}
+
 export default function FloatingCalculator() {
   const [raw, setRaw] = useState("0");
   const [expression, setExpression] = useState("");
   const [history, setHistory] = useState([]);
-  const [view, setView] = useState("calc"); // "calc" | "history"
+  const [view, setView] = useState("calc");
   const [justEvaled, setJustEvaled] = useState(false);
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pos, setPos] = useState({ x: null, y: null });
   const [dragging, setDragging] = useState(false);
+  const [pressedKey, setPressedKey] = useState(null);
   const dragOffset = useRef({ x: 0, y: 0 });
   const calcRef = useRef(null);
   const isMobile = useIsMobile();
 
-  // Reset position when switching mobile/desktop
   useEffect(() => {
     setPos({ x: null, y: null });
   }, [isMobile]);
 
-  // ── Drag (desktop only) ───────────────────────────────────────────────────
   const onMouseDown = (e) => {
     if (isMobile || e.target.closest("button")) return;
     setDragging(true);
@@ -70,6 +92,7 @@ export default function FloatingCalculator() {
     };
     e.preventDefault();
   };
+
   useEffect(() => {
     if (!dragging) return;
     const move = (e) =>
@@ -86,11 +109,12 @@ export default function FloatingCalculator() {
     };
   }, [dragging]);
 
-  // ── Input handler ─────────────────────────────────────────────────────────
   const handleInput = useCallback(
     (val) => {
       const ops = ["+", "-", "×", "÷"];
       const isOp = ops.includes(val);
+      setPressedKey(val);
+      setTimeout(() => setPressedKey(null), 130);
 
       if (val === "C") {
         setRaw("0");
@@ -115,14 +139,13 @@ export default function FloatingCalculator() {
         const fullExpr = expression + raw;
         const result = calcEvaluate(fullExpr);
         const resultStr = result !== null ? String(result) : "Error";
-        if (result !== null) {
+        if (result !== null)
           setHistory((h) =>
             [{ expr: fullExpr + "=", result: resultStr }, ...h].slice(
               0,
               HISTORY_MAX,
             ),
           );
-        }
         setExpression(fullExpr + "=");
         setRaw(resultStr);
         setJustEvaled(true);
@@ -166,7 +189,6 @@ export default function FloatingCalculator() {
     [raw, expression, justEvaled],
   );
 
-  // ── Keyboard ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
@@ -206,12 +228,11 @@ export default function FloatingCalculator() {
   const copyResult = () => {
     navigator.clipboard.writeText(raw).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
+      setTimeout(() => setCopied(false), 1800);
     });
   };
 
   const exprLine = justEvaled ? expression : expression || "\u00A0";
-
   const buttons = [
     ["C", "+/-", "%", "÷"],
     ["7", "8", "9", "×"],
@@ -220,311 +241,378 @@ export default function FloatingCalculator() {
     ["⌫", "0", ".", "="],
   ];
 
-  const btnClass = (v) => {
-    if (v === "=") return "cb cb-eq";
-    if (["+", "-", "×", "÷"].includes(v)) return "cb cb-op";
-    if (["C", "+/-", "%"].includes(v)) return "cb cb-fn";
-    if (v === "⌫") return "cb cb-del";
-    return "cb cb-num";
-  };
-
-  // Panel position: on mobile → bottom sheet anchored to viewport
-  // On desktop → floating near FAB, or dragged
   const panelStyle = isMobile
-    ? {
-        left: 0,
-        right: 0,
-        bottom: 0,
-        top: "auto",
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-        width: "100%",
-        maxWidth: "100%",
-      }
+    ? { left: 0, right: 0, bottom: 0, top: "auto" }
     : pos.x !== null
       ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" }
-      : { right: 24, bottom: 88 };
+      : { right: 22, bottom: 84 };
 
-  // Mobile overlay backdrop
-  const showBackdrop = isMobile && open;
+  const getBtnType = (v) => {
+    if (v === "=") return "eq";
+    if (["+", "-", "×", "÷"].includes(v)) return "op";
+    if (["C", "+/-", "%"].includes(v)) return "fn";
+    if (v === "⌫") return "del";
+    return "num";
+  };
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
-
-        .cw * { box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
         /* ── FAB ── */
-        .c-fab {
-          position: fixed; right: 16px; bottom: 16px; z-index: 9998;
-          width: 50px; height: 50px; border-radius: 15px; border: none; cursor: pointer;
-          background: linear-gradient(145deg, #f59e0b 0%, #ef4444 100%);
-          display: flex; align-items: center; justify-content: center; font-size: 20px;
-          box-shadow: 0 6px 20px rgba(245,158,11,.45), 0 2px 6px rgba(0,0,0,.35);
-          transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
+        .cfab {
+          position: fixed; right: 22px; bottom: 22px; z-index: 9998;
+          width: 50px; height: 50px; border-radius: 14px; border: none; cursor: pointer;
+          background: #1a1a1a;
+          color: #fff;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 16px rgba(0,0,0,.22), 0 1px 4px rgba(0,0,0,.12);
+          transition: transform .22s cubic-bezier(.34,1.56,.64,1), background .18s, box-shadow .2s;
           -webkit-tap-highlight-color: transparent;
         }
-        .c-fab:hover  { transform: scale(1.1) rotate(-8deg); box-shadow: 0 10px 30px rgba(245,158,11,.6); }
-        .c-fab:active { transform: scale(.91); }
-
-        /* ── Backdrop (mobile) ── */
-        .c-backdrop {
-          position: fixed; inset: 0; z-index: 9997;
-          background: rgba(0,0,0,.55);
-          backdrop-filter: blur(2px);
-          animation: bdIn .18s ease;
+        .cfab:hover {
+          transform: scale(1.08);
+          background: #2d2d2d;
+          box-shadow: 0 8px 28px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.14);
         }
-        @keyframes bdIn { from{opacity:0} to{opacity:1} }
+        .cfab:active { transform: scale(.92); }
+        .cfab.copen {
+          background: #7dc729;
+          color: #1a1a1a;
+          box-shadow: 0 6px 20px rgba(125,199,41,.35), 0 2px 6px rgba(0,0,0,.1);
+        }
+
+        /* ── Backdrop ── */
+        .cbd {
+          position: fixed; inset: 0; z-index: 9997;
+          background: rgba(220,225,215,.55);
+          backdrop-filter: blur(10px);
+          animation: cbdIn .2s ease;
+        }
+        @keyframes cbdIn { from{opacity:0} to{opacity:1} }
 
         /* ── Panel ── */
-        .c-panel {
-          position: fixed; z-index: 9999;
-          width: 284px;
-          border-radius: 24px; overflow: hidden;
-          font-family: 'Outfit', sans-serif;
-          background: #16161d;
-          box-shadow: 0 32px 80px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.07), inset 0 1px 0 rgba(255,255,255,.09);
-          animation: cUp .22s cubic-bezier(.34,1.56,.64,1);
+        .cpanel {
+          position: fixed; z-index: 9999; width: 312px;
+          border-radius: 20px; overflow: hidden;
+          font-family: 'Inter', sans-serif;
+          background: #f5f6f2;
+          border: 1px solid rgba(0,0,0,.07);
+          box-shadow:
+            0 2px 0 rgba(255,255,255,.9) inset,
+            0 20px 60px rgba(0,0,0,.14),
+            0 4px 16px rgba(0,0,0,.08);
+          animation: cUp .26s cubic-bezier(.34,1.56,.64,1);
           display: flex; flex-direction: column;
-          max-height: calc(100vh - 32px);
+          max-height: calc(100vh - 44px);
         }
-        /* Mobile bottom-sheet override */
-        .c-panel.is-mobile {
+        .cpanel.cmob {
           width: 100%; max-width: 100%;
-          border-radius: 24px 24px 0 0;
+          border-radius: 20px 20px 0 0;
           max-height: 92vh;
-          animation: cSheet .24s cubic-bezier(.34,1.56,.64,1);
+          animation: cSheet .26s cubic-bezier(.34,1.56,.64,1);
         }
-        @keyframes cUp    { from{opacity:0;transform:scale(.84) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        @keyframes cSheet { from{opacity:0;transform:translateY(100%)} to{opacity:1;transform:translateY(0)} }
+        @keyframes cUp    { from{opacity:0;transform:scale(.92) translateY(18px)} to{opacity:1;transform:none} }
+        @keyframes cSheet { from{opacity:0;transform:translateY(100%)} to{opacity:1;transform:none} }
+
+        /* ── Pill ── */
+        .cpill {
+          display: none; width: 36px; height: 4px; border-radius: 99px;
+          background: rgba(0,0,0,.1); margin: 10px auto 0;
+        }
+        .cpanel.cmob .cpill { display: block; }
 
         /* ── Header ── */
-        .c-head {
-          display: flex; align-items: center; gap: 8px;
-          padding: 12px 14px 8px; cursor: grab; flex-shrink: 0;
+        .chead {
+          display: flex; align-items: center; gap: 10px;
+          padding: 15px 16px 12px; cursor: grab; user-select: none;
+          flex-shrink: 0;
+          border-bottom: 1px solid rgba(0,0,0,.06);
         }
-        .c-panel.is-mobile .c-head { cursor: default; padding: 16px 18px 8px; }
-        .c-head:active { cursor: grabbing; }
+        .cpanel.cmob .chead { cursor: default; }
 
-        /* Mobile drag pill */
-        .c-pill {
-          display: none; width: 36px; height: 4px; border-radius: 2px;
-          background: rgba(255,255,255,.15); margin: 0 auto 4px;
+        .chead-brand {
+          font-size: 13px; font-weight: 700; color: #1a1a1a;
+          letter-spacing: -.03em; flex: 1;
+          display: flex; align-items: center; gap: 6px;
         }
-        .c-panel.is-mobile .c-pill { display: block; }
-
-        .c-head-title {
-          flex: 1; font-size: 11px; font-weight: 700;
-          letter-spacing: .14em; text-transform: uppercase;
-          background: linear-gradient(90deg, #f59e0b, #ef4444);
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        .chead-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          background: #7dc729;
+          box-shadow: 0 0 6px rgba(125,199,41,.6);
         }
 
-        /* Tab switcher */
-        .c-tabs { display: flex; gap: 4px; }
-        .c-tab {
-          padding: 4px 10px; border-radius: 8px; border: none; cursor: pointer;
-          font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600;
+        /* Tabs */
+        .ctabs { display: flex; gap: 2px; }
+        .ctab {
+          padding: 5px 11px; border-radius: 8px; border: none; cursor: pointer;
+          font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500;
+          background: transparent; color: rgba(0,0,0,.35);
           transition: background .15s, color .15s;
-          background: rgba(255,255,255,.06); color: #4b5563;
           -webkit-tap-highlight-color: transparent;
         }
-        .c-tab.active { background: rgba(245,158,11,.18); color: #f59e0b; }
+        .ctab:hover { background: rgba(0,0,0,.05); color: rgba(0,0,0,.65); }
+        .ctab.con {
+          background: #1a1a1a; color: #fff;
+          border-radius: 8px;
+        }
 
-        .c-icon-btn {
+        .cclose {
           width: 26px; height: 26px; border-radius: 8px; border: none;
-          background: rgba(255,255,255,.07); color: #4b5563; font-size: 13px;
-          cursor: pointer; display: flex; align-items: center; justify-content: center;
+          background: rgba(0,0,0,.06); color: rgba(0,0,0,.4);
+          font-size: 11px; font-weight: 700; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
           transition: background .15s, color .15s;
           -webkit-tap-highlight-color: transparent;
         }
-        .c-icon-btn:hover { background: rgba(255,255,255,.14); color: #d1d5db; }
+        .cclose:hover { background: rgba(220,50,50,.1); color: #e03535; }
 
-        /* ── History view ── */
-        .c-hist-view {
+        /* ── Display ── */
+        .cdisp {
+          margin: 10px 12px 4px;
+          padding: 18px 18px 20px;
+          border-radius: 14px;
+          background: #1a1a1a;
+          display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+          min-height: 110px; justify-content: flex-end;
+          position: relative; flex-shrink: 0; overflow: hidden;
+        }
+        /* lime green glow bottom-right */
+        .cdisp::after {
+          content: '';
+          position: absolute; bottom: -30px; right: -30px;
+          width: 130px; height: 130px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(125,199,41,.18) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        /* circuit-board subtle lines top */
+        .cdisp::before {
+          content: '';
+          position: absolute; inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+          background-size: 28px 28px;
+          pointer-events: none;
+        }
+
+        .cexpr {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px; color: rgba(255,255,255,.28);
+          min-height: 18px; max-width: 100%;
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl;
+          position: relative; z-index: 1;
+        }
+        .cmain {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: clamp(30px, 9vw, 40px); font-weight: 300; line-height: 1.0;
+          color: #fff;
+          max-width: 100%; overflow: hidden;
+          text-overflow: ellipsis; white-space: nowrap; direction: rtl;
+          cursor: pointer; transition: color .15s;
+          letter-spacing: -.03em;
+          position: relative; z-index: 1;
+        }
+        .cpanel.cmob .cmain { font-size: clamp(32px, 10vw, 44px); }
+        .cmain:hover { color: #a8e05a; }
+        .cmain.cerr  { color: #ff7070; font-size: 22px; }
+
+        .ccopy {
+          position: absolute; bottom: 9px; left: 18px;
+          font-size: 10px; font-family: 'Inter', sans-serif; font-weight: 400;
+          color: rgba(255,255,255,.18); pointer-events: none; transition: color .15s;
+          z-index: 1;
+        }
+        .cmain:hover ~ .ccopy { color: rgba(168,224,90,.5); }
+        .ccopy.con { color: #7dc729 !important; }
+
+        /* ── Grid ── */
+        .cgrid {
+          display: grid; grid-template-columns: repeat(4,1fr);
+          gap: 7px; padding: 10px 12px 14px;
+        }
+        .cpanel.cmob .cgrid { gap: 9px; padding: 10px 14px 24px; }
+
+        /* Base button */
+        .cb {
+          border: none; cursor: pointer; border-radius: 12px;
+          font-family: 'Inter', sans-serif;
+          font-size: 16px; font-weight: 500;
+          display: flex; align-items: center; justify-content: center;
+          height: 58px;
+          -webkit-tap-highlight-color: transparent;
+          transition: transform .12s cubic-bezier(.34,1.56,.64,1), background .12s, box-shadow .12s;
+          letter-spacing: -.01em;
+          position: relative;
+        }
+        .cpanel.cmob .cb { height: 64px; font-size: 18px; border-radius: 14px; }
+
+        .cb:hover  { transform: translateY(-1px); }
+        .cb:active, .cb.cpressed { transform: scale(.88) !important; }
+
+        /* Number — white card */
+        .cb-num {
+          background: #ffffff;
+          color: #1a1a1a;
+          box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.05);
+        }
+        .cb-num:hover { background: #fafafa; box-shadow: 0 3px 10px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.06); }
+
+        /* Function — light grey */
+        .cb-fn {
+          background: #eaeee6;
+          color: #5a6350;
+          box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        }
+        .cb-fn:hover { background: #e2e7de; }
+
+        /* Delete — soft red tint */
+        .cb-del {
+          background: #fff0f0;
+          color: #d94040;
+          box-shadow: 0 1px 3px rgba(217,64,64,.08), 0 0 0 1px rgba(217,64,64,.08);
+          font-size: 18px;
+        }
+        .cb-del:hover { background: #ffe4e4; color: #c03030; }
+
+        /* Operator — lime tint */
+        .cb-op {
+          background: #f0f8e8;
+          color: #4a8020;
+          box-shadow: 0 1px 3px rgba(74,128,32,.08), 0 0 0 1px rgba(125,199,41,.12);
+          font-size: 17px;
+        }
+        .cb-op:hover { background: #e8f5d8; color: #3d6b1a; }
+
+        /* Equals — Crusoe dark pill */
+        .cb-eq {
+          background: #1a1a1a;
+          color: #ffffff;
+          box-shadow: 0 4px 14px rgba(0,0,0,.25), 0 1px 4px rgba(0,0,0,.15);
+          font-size: 20px; font-weight: 600;
+        }
+        .cb-eq:hover {
+          background: #2d2d2d;
+          box-shadow: 0 6px 20px rgba(0,0,0,.3), 0 2px 6px rgba(0,0,0,.15);
+          transform: translateY(-1px);
+        }
+        .cb-eq:active, .cb-eq.cpressed {
+          transform: scale(.88) !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,.2);
+        }
+
+        /* ── History ── */
+        .chist {
           flex: 1; overflow-y: auto; padding: 4px 12px 12px;
-          scrollbar-width: thin; scrollbar-color: #2d3748 transparent;
+          scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.1) transparent;
           min-height: 0;
         }
-        .c-hist-hd {
-          font-size: 10px; text-transform: uppercase; letter-spacing: .12em;
-          color: #2d3748; font-weight: 700; margin: 6px 0 8px; padding: 0 2px;
+        .chist-hd {
+          font-size: 10px; text-transform: uppercase; letter-spacing: .14em;
+          color: rgba(0,0,0,.25); font-weight: 600; margin: 8px 0 10px;
         }
-        .c-hist-row {
+        .chist-clear {
+          width: 100%; padding: 9px; border-radius: 10px;
+          border: 1px solid rgba(217,64,64,.15);
+          margin-bottom: 10px;
+          background: #fff5f5; color: #d94040;
+          font-size: 11px; font-weight: 500; font-family: 'Inter', sans-serif;
+          cursor: pointer; transition: background .15s;
+        }
+        .chist-clear:hover { background: #ffe8e8; }
+
+        .chist-row {
           display: flex; justify-content: space-between; align-items: center;
-          padding: 9px 12px; border-radius: 12px; margin-bottom: 4px;
-          background: #111118; cursor: pointer; transition: background .15s;
+          padding: 11px 13px; border-radius: 12px; margin-bottom: 5px;
+          background: #fff;
+          border: 1px solid rgba(0,0,0,.06);
+          box-shadow: 0 1px 3px rgba(0,0,0,.04);
+          cursor: pointer; transition: background .15s, box-shadow .15s;
           -webkit-tap-highlight-color: transparent;
         }
-        .c-hist-row:hover, .c-hist-row:active { background: #1e1e2e; }
-        .c-hist-expr { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #374151; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .c-hist-val  { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #f59e0b; font-weight: 500; }
-        .c-hist-empty { font-size: 12px; color: #1e293b; text-align: center; padding: 32px 0; }
-        .c-hist-clear {
-          margin: 4px 0 8px; width: 100%; padding: 7px; border-radius: 10px; border: none;
-          background: rgba(239,68,68,.08); color: #ef4444; font-size: 11px; font-weight: 600;
-          font-family: 'Outfit', sans-serif; cursor: pointer; transition: background .15s;
-        }
-        .c-hist-clear:hover { background: rgba(239,68,68,.15); }
-
-        /* ── Calc view ── */
-        .c-calc-view { flex-shrink: 0; }
-
-        .c-display {
-          padding: 2px 16px 14px;
-          display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
-          min-height: 80px; justify-content: flex-end; position: relative;
-        }
-        .c-panel.is-mobile .c-display { padding: 2px 20px 14px; min-height: 86px; }
-
-        .c-expr {
+        .chist-row:hover { background: #f8faf4; box-shadow: 0 3px 10px rgba(0,0,0,.07); border-color: rgba(125,199,41,.2); }
+        .chist-expr {
           font-family: 'JetBrains Mono', monospace;
-          font-size: 11px; color: #2d3a4a; min-height: 17px;
-          max-width: 100%; overflow: hidden; text-overflow: ellipsis;
-          white-space: nowrap; direction: rtl;
+          font-size: 10px; color: rgba(0,0,0,.3);
+          max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
-        .c-main {
+        .chist-val {
           font-family: 'JetBrains Mono', monospace;
-          font-weight: 400; line-height: 1.1; color: #f1f5f9;
-          max-width: 100%; overflow: hidden; text-overflow: ellipsis;
-          white-space: nowrap; direction: rtl;
-          cursor: pointer; transition: color .12s;
-          /* Responsive font size */
-          font-size: clamp(26px, 9vw, 36px);
+          font-size: 15px; color: #1a1a1a; font-weight: 500;
         }
-        .c-panel.is-mobile .c-main { font-size: clamp(28px, 10vw, 40px); }
-        .c-main:hover { color: #fbbf24; }
-        .c-main.is-error { color: #f87171; font-size: 22px; }
-        .c-copy-tip {
-          position: absolute; bottom: 4px; left: 16px;
-          font-size: 10px; font-family: 'Outfit', sans-serif;
-          color: #1e293b; transition: color .2s; pointer-events: none;
+        .chist-empty {
+          font-size: 12px; color: rgba(0,0,0,.2); text-align: center;
+          padding: 40px 0; font-family: 'Inter', sans-serif; font-weight: 400;
         }
-        .c-main:hover ~ .c-copy-tip { color: #f59e0b; }
-        .c-copy-tip.on { color: #4ade80 !important; }
-
-        .c-sep { height: 1px; background: rgba(255,255,255,.05); margin: 0 12px 2px; }
-
-        /* ── Button grid ── */
-        .c-grid {
-          display: grid; grid-template-columns: repeat(4, 1fr);
-          gap: 6px; padding: 8px 10px 12px;
-        }
-        .c-panel.is-mobile .c-grid { gap: 8px; padding: 8px 12px 20px; }
-
-        .cb {
-          border: none; cursor: pointer; border-radius: 14px;
-          font-size: 16px; font-weight: 600;
-          font-family: 'Outfit', sans-serif;
-          display: flex; align-items: center; justify-content: center;
-          transition: transform .1s;
-          position: relative; overflow: hidden;
-          height: 54px;
-          -webkit-tap-highlight-color: transparent;
-        }
-        /* Mobile: taller buttons */
-        .c-panel.is-mobile .cb { height: 62px; font-size: 18px; border-radius: 16px; }
-
-        .cb::after {
-          content: ''; position: absolute; inset: 0; border-radius: inherit;
-          background: rgba(255,255,255,.0); transition: background .15s;
-        }
-        .cb:hover::after  { background: rgba(255,255,255,.10); }
-        .cb:active        { transform: scale(.88); }
-
-        .cb-num {
-          background: #222230; color: #e2e8f0;
-          box-shadow: 0 3px 0 #0b0b14, inset 0 1px 0 rgba(255,255,255,.06);
-        }
-        .cb-fn {
-          background: #1b2438; color: #7c8fa8;
-          box-shadow: 0 3px 0 #0a0f1c, inset 0 1px 0 rgba(255,255,255,.05);
-        }
-        .cb-del {
-          background: #2b1616; color: #f87171; font-size: 18px;
-          box-shadow: 0 3px 0 #150b0b, inset 0 1px 0 rgba(255,100,100,.07);
-        }
-        .cb-op {
-          background: linear-gradient(160deg, #b45309 0%, #78350f 100%);
-          color: #fde68a; font-size: 18px;
-          box-shadow: 0 3px 0 #3d1a02, inset 0 1px 0 rgba(253,230,138,.12);
-        }
-        .cb-eq {
-          background: linear-gradient(150deg, #fbbf24 0%, #f59e0b 60%, #d97706 100%);
-          color: #1c0a00; font-size: 20px; font-weight: 700;
-          box-shadow: 0 4px 18px rgba(251,191,36,.45), 0 3px 0 #7c2d12, inset 0 1px 0 rgba(255,255,200,.25);
-        }
-        .cb-eq:hover { filter: brightness(1.08); }
       `}</style>
 
-      <div className="cw">
-        {/* Backdrop on mobile */}
-        {showBackdrop && (
-          <div className="c-backdrop" onClick={() => setOpen(false)} />
+      <div>
+        {isMobile && open && (
+          <div className="cbd" onClick={() => setOpen(false)} />
         )}
 
         {/* FAB */}
         <button
-          className="c-fab"
+          className={`cfab${open ? " copen" : ""}`}
           onClick={() => setOpen((o) => !o)}
           title="Calculator"
         >
-          🧮
+          <CalcIcon size={20} />
         </button>
 
-        {/* Panel */}
         {open && (
           <div
             ref={calcRef}
-            className={`c-panel${isMobile ? " is-mobile" : ""}`}
+            className={`cpanel${isMobile ? " cmob" : ""}`}
             style={panelStyle}
           >
-            {/* Drag pill (mobile) */}
-            <div className="c-pill" />
+            <div className="cpill" />
 
             {/* Header */}
-            <div className="c-head" onMouseDown={onMouseDown}>
-              <span className="c-head-title">Calculator</span>
-              {/* Tab switcher */}
-              <div className="c-tabs">
+            <div className="chead" onMouseDown={onMouseDown}>
+              <div className="chead-brand">
+                <div className="chead-dot" />
+                Calculator
+              </div>
+              <div className="ctabs">
                 <button
-                  className={`c-tab${view === "calc" ? " active" : ""}`}
+                  className={`ctab${view === "calc" ? " con" : ""}`}
                   onClick={() => setView("calc")}
                 >
-                  🔢 Calc
+                  Keypad
                 </button>
                 <button
-                  className={`c-tab${view === "history" ? " active" : ""}`}
+                  className={`ctab${view === "history" ? " con" : ""}`}
                   onClick={() => setView("history")}
                 >
-                  📋 {history.length > 0 ? history.length : ""}
+                  History{history.length > 0 ? ` · ${history.length}` : ""}
                 </button>
               </div>
-              <button className="c-icon-btn" onClick={() => setOpen(false)}>
+              <button className="cclose" onClick={() => setOpen(false)}>
                 ✕
               </button>
             </div>
 
-            {/* ── History view ── */}
+            {/* History */}
             {view === "history" && (
-              <div className="c-hist-view">
-                <p className="c-hist-hd">Calculation History</p>
+              <div className="chist">
+                <p className="chist-hd">Recent</p>
                 {history.length > 0 && (
                   <button
-                    className="c-hist-clear"
+                    className="chist-clear"
                     onClick={() => setHistory([])}
                   >
-                    🗑 Clear history
+                    Clear all
                   </button>
                 )}
                 {history.length === 0 ? (
-                  <div className="c-hist-empty">No calculations yet</div>
+                  <div className="chist-empty">No calculations yet</div>
                 ) : (
                   history.map((h, i) => (
                     <div
                       key={i}
-                      className="c-hist-row"
+                      className="chist-row"
                       onClick={() => {
                         setRaw(h.result);
                         setExpression("");
@@ -532,8 +620,8 @@ export default function FloatingCalculator() {
                         setView("calc");
                       }}
                     >
-                      <span className="c-hist-expr">{h.expr}</span>
-                      <span className="c-hist-val">
+                      <span className="chist-expr">{h.expr}</span>
+                      <span className="chist-val">
                         {formatDisplay(h.result)}
                       </span>
                     </div>
@@ -542,39 +630,38 @@ export default function FloatingCalculator() {
               </div>
             )}
 
-            {/* ── Calc view ── */}
+            {/* Calc */}
             {view === "calc" && (
-              <div className="c-calc-view">
-                {/* Display */}
-                <div className="c-display">
-                  <div className="c-expr">{exprLine}</div>
+              <>
+                <div className="cdisp">
+                  <div className="cexpr">{exprLine}</div>
                   <div
-                    className={`c-main${raw === "Error" ? " is-error" : ""}`}
+                    className={`cmain${raw === "Error" ? " cerr" : ""}`}
                     onClick={copyResult}
                     title="Tap to copy"
                   >
                     {raw === "Error" ? "Error" : formatDisplay(raw)}
                   </div>
-                  <div className={`c-copy-tip${copied ? " on" : ""}`}>
-                    {copied ? "✓ Copied!" : "tap to copy"}
+                  <div className={`ccopy${copied ? " con" : ""}`}>
+                    {copied ? "✓ Copied" : "Tap to copy"}
                   </div>
                 </div>
 
-                <div className="c-sep" />
-
-                {/* Buttons */}
-                <div className="c-grid">
-                  {buttons.flat().map((v, i) => (
-                    <button
-                      key={i}
-                      className={btnClass(v)}
-                      onClick={() => handleInput(v)}
-                    >
-                      {v}
-                    </button>
-                  ))}
+                <div className="cgrid">
+                  {buttons.flat().map((v, i) => {
+                    const t = getBtnType(v);
+                    return (
+                      <button
+                        key={i}
+                        className={`cb cb-${t}${pressedKey === v ? " cpressed" : ""}`}
+                        onClick={() => handleInput(v)}
+                      >
+                        {v}
+                      </button>
+                    );
+                  })}
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}
