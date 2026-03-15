@@ -196,8 +196,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (location.state?.justLoggedIn) {
-      setBanner({ type: "success", title: t("loginSuccess") });
-      window.history.replaceState({}, ""); // clear state so it doesn't show again on refresh
+      setBanner({
+        type: "success",
+        title: language === "kh" ? "ចូលគណនីបានជោគជ័យ" : t("Login successful"),
+      });
+      window.history.replaceState({}, "");
     }
   }, []);
 
