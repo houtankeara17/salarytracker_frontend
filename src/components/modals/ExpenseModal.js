@@ -7,8 +7,8 @@ import StatusBanner from "../StatusBanner";
 
 const CATEGORIES = [
   { value: "food", emoji: "🍚" },
-  { value: "Drink", emoji: "🥤" },
-  { value: "Fruit", emoji: "🍓" },
+  { value: "drink", emoji: "🥤" },
+  { value: "fruit", emoji: "🍓" },
   { value: "transport", emoji: "🚗" },
   { value: "clothing", emoji: "👕" },
   { value: "health", emoji: "💊" },

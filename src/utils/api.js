@@ -37,23 +37,62 @@ api.interceptors.request.use(
 // ===============================
 // Response Interceptor
 // ===============================
+// ===============================
+// Response Interceptor
+// ===============================
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
+    const lang = localStorage.getItem("mt_language") || "en";
+    const kh = lang === "kh";
+
     const isAuthRoute =
       window.location.pathname === "/login" ||
       window.location.pathname === "/register";
 
     if (error.response?.status === 401 && !isAuthRoute) {
-      // ← skip on auth pages
       localStorage.removeItem("mt_token");
       sessionStorage.removeItem("mt_token");
       delete api.defaults.headers.common["Authorization"];
       window.location.href = "/login";
     }
 
+    // ── Timeout / Network errors ──
+    if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+      return Promise.reject(
+        new Error(
+          kh
+            ? "ការតភ្ជាប់យឺតពេក។ សូមព្យាយាមម្តងទៀត"
+            : "Connection timed out. Please try again.",
+        ),
+      );
+    }
+
+    if (!error.response) {
+      return Promise.reject(
+        new Error(
+          kh
+            ? "គ្មានការតភ្ជាប់អ៊ីនធឺណិត។ សូមពិនិត្យការតភ្ជាប់របស់អ្នក"
+            : "No internet connection. Please check your network.",
+        ),
+      );
+    }
+
+    // ── HTTP status errors ──
+    const status = error.response?.status;
+    const serverMessage = error.response?.data?.message;
+
+    const statusMessages = {
+      400: kh ? "សំណើមិនត្រឹមត្រូវ" : "Bad request.",
+      403: kh ? "អ្នកគ្មានសិទ្ធិចូលប្រើ" : "Access denied.",
+      404: kh ? "រកមិនឃើញទិន្នន័យ" : "Resource not found.",
+      500: kh ? "មានបញ្ហាក្នុងម៉ាស៊ីនមេ" : "Server error. Please try again.",
+    };
+
     const message =
-      error.response?.data?.message || error.message || "Network Error";
+      serverMessage ||
+      statusMessages[status] ||
+      (kh ? "មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្តងទៀត" : "Something went wrong.");
 
     return Promise.reject(new Error(message));
   },
