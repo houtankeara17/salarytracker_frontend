@@ -7,6 +7,9 @@ import DeleteModal from "../components/modals/DeleteModal";
 import StatusBanner from "../components/StatusBanner";
 import { formatDate } from "../utils/khmerUtils";
 
+/* ─────────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────────── */
 const CATEGORIES = [
   "food",
   "drink",
@@ -34,136 +37,772 @@ const MONTHS_EN = [
   "November",
   "December",
 ];
-const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 30, "All"];
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 30, "All"];
 
-const IconTable = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+const CAT_META = {
+  food: {
+    emoji: "🍚",
+    color: "#16a34a",
+    bg: "rgba(22,163,74,0.10)",
+    border: "rgba(22,163,74,0.22)",
+  },
+  drink: {
+    emoji: "🧋",
+    color: "#7c3aed",
+    bg: "rgba(124,58,237,0.10)",
+    border: "rgba(124,58,237,0.22)",
+  },
+  fruit: {
+    emoji: "🍎",
+    color: "#ea580c",
+    bg: "rgba(234,88,12,0.10)",
+    border: "rgba(234,88,12,0.22)",
+  },
+  transport: {
+    emoji: "🚗",
+    color: "#ca8a04",
+    bg: "rgba(202,138,4,0.10)",
+    border: "rgba(202,138,4,0.22)",
+  },
+  clothing: {
+    emoji: "👕",
+    color: "#0891b2",
+    bg: "rgba(8,145,178,0.10)",
+    border: "rgba(8,145,178,0.22)",
+  },
+  health: {
+    emoji: "💊",
+    color: "#e11d48",
+    bg: "rgba(225,29,72,0.10)",
+    border: "rgba(225,29,72,0.22)",
+  },
+  entertainment: {
+    emoji: "🎮",
+    color: "#6d28d9",
+    bg: "rgba(109,40,217,0.10)",
+    border: "rgba(109,40,217,0.22)",
+  },
+  education: {
+    emoji: "📚",
+    color: "#1d4ed8",
+    bg: "rgba(29,78,216,0.10)",
+    border: "rgba(29,78,216,0.22)",
+  },
+  utilities: {
+    emoji: "⚡",
+    color: "#d97706",
+    bg: "rgba(217,119,6,0.10)",
+    border: "rgba(217,119,6,0.22)",
+  },
+  shopping: {
+    emoji: "🛍",
+    color: "#db2777",
+    bg: "rgba(219,39,119,0.10)",
+    border: "rgba(219,39,119,0.22)",
+  },
+  other: {
+    emoji: "📦",
+    color: "#64748b",
+    bg: "rgba(100,116,139,0.10)",
+    border: "rgba(100,116,139,0.22)",
+  },
+};
+
+const PAY_META = {
+  cash: {
+    icon: "💵",
+    label: "Cash",
+    color: "#16a34a",
+    bg: "rgba(22,163,74,0.09)",
+  },
+  qr: {
+    icon: "📱",
+    label: "QR Pay",
+    color: "#7c3aed",
+    bg: "rgba(124,58,237,0.09)",
+  },
+  card: {
+    icon: "💳",
+    label: "Card",
+    color: "#0891b2",
+    bg: "rgba(8,145,178,0.09)",
+  },
+  transfer: {
+    icon: "🔄",
+    label: "Transfer",
+    color: "#ca8a04",
+    bg: "rgba(202,138,4,0.09)",
+  },
+};
+
+/* ─────────────────────────────────────────────
+   TINY ICON COMPONENTS
+───────────────────────────────────────────── */
+const IcBox = ({ active }) => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
     <rect
       x="1"
       y="1"
-      width="14"
+      width="5.5"
+      height="5.5"
+      rx="1.5"
+      fill="currentColor"
+      opacity={active ? "1" : "0.7"}
+    />
+    <rect
+      x="8.5"
+      y="1"
+      width="5.5"
+      height="5.5"
+      rx="1.5"
+      fill="currentColor"
+      opacity={active ? "1" : "0.7"}
+    />
+    <rect
+      x="1"
+      y="8.5"
+      width="5.5"
+      height="5.5"
+      rx="1.5"
+      fill="currentColor"
+      opacity={active ? "0.6" : "0.4"}
+    />
+    <rect
+      x="8.5"
+      y="8.5"
+      width="5.5"
+      height="5.5"
+      rx="1.5"
+      fill="currentColor"
+      opacity={active ? "0.6" : "0.4"}
+    />
+  </svg>
+);
+const IcTable = ({ active }) => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <rect
+      x="1"
+      y="1"
+      width="13"
       height="3"
       rx="1"
       fill="currentColor"
-      opacity=".9"
+      opacity={active ? "1" : "0.7"}
     />
     <rect
       x="1"
       y="6"
-      width="6"
+      width="5.5"
       height="3"
       rx="1"
       fill="currentColor"
-      opacity=".7"
+      opacity={active ? "0.8" : "0.5"}
     />
     <rect
-      x="9"
+      x="8.5"
       y="6"
-      width="6"
+      width="5.5"
       height="3"
       rx="1"
       fill="currentColor"
-      opacity=".7"
+      opacity={active ? "0.8" : "0.5"}
     />
     <rect
       x="1"
       y="11"
-      width="6"
+      width="5.5"
       height="3"
       rx="1"
       fill="currentColor"
-      opacity=".5"
+      opacity={active ? "0.5" : "0.35"}
     />
     <rect
-      x="9"
+      x="8.5"
       y="11"
-      width="6"
+      width="5.5"
       height="3"
       rx="1"
       fill="currentColor"
-      opacity=".5"
+      opacity={active ? "0.5" : "0.35"}
     />
   </svg>
 );
-const IconBox = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <rect
-      x="1"
-      y="1"
-      width="6"
-      height="6"
-      rx="1.5"
-      fill="currentColor"
-      opacity=".9"
-    />
-    <rect
-      x="9"
-      y="1"
-      width="6"
-      height="6"
-      rx="1.5"
-      fill="currentColor"
-      opacity=".9"
-    />
-    <rect
-      x="1"
-      y="9"
-      width="6"
-      height="6"
-      rx="1.5"
-      fill="currentColor"
-      opacity=".6"
-    />
-    <rect
-      x="9"
-      y="9"
-      width="6"
-      height="6"
-      rx="1.5"
-      fill="currentColor"
-      opacity=".6"
-    />
-  </svg>
-);
-const IconRow = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+const IcRow = ({ active }) => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
     <rect
       x="1"
       y="2"
-      width="14"
+      width="13"
       height="3"
       rx="1"
       fill="currentColor"
-      opacity=".9"
+      opacity={active ? "1" : "0.7"}
     />
     <rect
       x="1"
       y="7"
-      width="14"
+      width="13"
       height="3"
       rx="1"
       fill="currentColor"
-      opacity=".7"
+      opacity={active ? "0.7" : "0.5"}
     />
     <rect
       x="1"
       y="12"
-      width="14"
+      width="13"
       height="3"
       rx="1"
       fill="currentColor"
-      opacity=".5"
+      opacity={active ? "0.4" : "0.3"}
     />
   </svg>
 );
-const VIEW_MODES = [
-  { key: "box", label: "Box", Icon: IconBox },
-  { key: "table", label: "Table", Icon: IconTable },
-  { key: "row", label: "Row", Icon: IconRow },
-];
+const IcPlus = () => (
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+    <line
+      x1="6.5"
+      y1="1.5"
+      x2="6.5"
+      y2="11.5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <line
+      x1="1.5"
+      y1="6.5"
+      x2="11.5"
+      y2="6.5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+const IcSearch = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+    <line
+      x1="9.5"
+      y1="9.5"
+      x2="12.5"
+      y2="12.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+  </svg>
+);
 
+/* ─────────────────────────────────────────────
+   INLINE STYLES
+───────────────────────────────────────────── */
+const S = {
+  /* page wrapper */
+  page: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+    animation: "epFadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both",
+  },
+
+  /* header */
+  header: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "12px",
+  },
+  h1: {
+    fontFamily: "'Syne', sans-serif",
+    fontSize: "26px",
+    fontWeight: 800,
+    letterSpacing: "-0.025em",
+    color: "var(--text-primary)",
+    lineHeight: 1.1,
+  },
+  hsub: { fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px" },
+
+  addBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "7px",
+    padding: "10px 20px",
+    borderRadius: "12px",
+    border: "none",
+    background: "linear-gradient(135deg,#6366f1,#4f46e5)",
+    color: "#fff",
+    fontWeight: 700,
+    fontSize: "13px",
+    fontFamily: "'DM Sans',sans-serif",
+    cursor: "pointer",
+    boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
+    transition: "transform 0.15s,box-shadow 0.15s",
+  },
+
+  /* stat bar */
+  statBar: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4,1fr)",
+    gap: "10px",
+  },
+  statCard: {
+    background: "var(--card-bg)",
+    border: "1px solid var(--border)",
+    borderRadius: "16px",
+    padding: "16px 18px",
+    position: "relative",
+    overflow: "hidden",
+  },
+  statLabel: {
+    fontSize: "11px",
+    fontWeight: 700,
+    color: "var(--text-secondary)",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    marginBottom: "6px",
+  },
+  statVal: {
+    fontFamily: "'DM Mono',monospace",
+    fontSize: "20px",
+    fontWeight: 700,
+    color: "var(--text-primary)",
+    lineHeight: 1,
+  },
+  statSub: {
+    fontSize: "11px",
+    color: "var(--text-secondary)",
+    marginTop: "4px",
+  },
+
+  /* filter panel */
+  filterPanel: {
+    background: "var(--card-bg)",
+    border: "1px solid var(--border)",
+    borderRadius: "16px",
+    padding: "14px 16px",
+  },
+  filterGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr 1fr",
+    gap: "10px",
+  },
+  searchWrap: { position: "relative" },
+  searchIcon: {
+    position: "absolute",
+    left: "11px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: "var(--text-secondary)",
+    pointerEvents: "none",
+  },
+  searchInput: {
+    width: "100%",
+    padding: "9px 13px 9px 34px",
+    borderRadius: "10px",
+    border: "1.5px solid var(--border)",
+    background: "var(--bg-primary)",
+    color: "var(--text-primary)",
+    fontFamily: "'DM Sans',sans-serif",
+    fontSize: "13px",
+    outline: "none",
+    transition: "border-color 0.2s,box-shadow 0.2s",
+  },
+  select: {
+    width: "100%",
+    padding: "9px 13px",
+    borderRadius: "10px",
+    border: "1.5px solid var(--border)",
+    background: "var(--bg-primary)",
+    color: "var(--text-primary)",
+    fontFamily: "'DM Sans',sans-serif",
+    fontSize: "13px",
+    outline: "none",
+    transition: "border-color 0.2s",
+    cursor: "pointer",
+  },
+
+  /* main card */
+  mainCard: {
+    background: "var(--card-bg)",
+    border: "1px solid var(--border)",
+    borderRadius: "18px",
+    overflow: "hidden",
+  },
+
+  /* toolbar */
+  toolbar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "10px",
+    padding: "12px 16px",
+    borderBottom: "1px solid var(--border)",
+    background: "var(--bg-primary)",
+  },
+  toolbarLeft: {
+    fontSize: "12px",
+    color: "var(--text-secondary)",
+    fontFamily: "'DM Sans',sans-serif",
+  },
+
+  viewToggle: {
+    display: "flex",
+    gap: "2px",
+    padding: "3px",
+    background: "var(--bg-primary)",
+    border: "1px solid var(--border)",
+    borderRadius: "10px",
+  },
+  viewBtn: (active) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: "5px",
+    padding: "5px 12px",
+    borderRadius: "7px",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "12px",
+    fontWeight: active ? 700 : 500,
+    fontFamily: "'DM Sans',sans-serif",
+    color: active ? "#fff" : "var(--text-secondary)",
+    background: active
+      ? "linear-gradient(135deg,#6366f1,#4f46e5)"
+      : "transparent",
+    boxShadow: active ? "0 2px 8px rgba(99,102,241,0.3)" : "none",
+    transition: "all 0.15s",
+  }),
+
+  /* empty */
+  empty: { padding: "56px 16px", textAlign: "center" },
+
+  /* pagination */
+  pgBar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "10px",
+    padding: "11px 16px",
+    borderTop: "1px solid var(--border)",
+    background: "var(--bg-primary)",
+  },
+  pgInfo: { fontSize: "12px", color: "var(--text-secondary)" },
+  pgBtns: { display: "flex", gap: "3px" },
+  pgBtn: (active, disabled) => ({
+    minWidth: "32px",
+    padding: "5px 9px",
+    borderRadius: "7px",
+    cursor: disabled ? "not-allowed" : "pointer",
+    border: active ? "none" : "1px solid var(--border)",
+    background: active
+      ? "linear-gradient(135deg,#6366f1,#4f46e5)"
+      : "var(--bg-primary)",
+    color: active
+      ? "#fff"
+      : disabled
+        ? "var(--text-secondary)"
+        : "var(--text-primary)",
+    fontSize: "12px",
+    fontWeight: active ? 700 : 500,
+    opacity: disabled ? 0.4 : 1,
+    transition: "all 0.15s",
+    boxShadow: active ? "0 2px 8px rgba(99,102,241,0.3)" : "none",
+    fontFamily: "'DM Sans',sans-serif",
+  }),
+
+  /* size picker */
+  sizeRow: { display: "flex", alignItems: "center", gap: "5px" },
+  sizeLabel: { fontSize: "11px", color: "var(--text-secondary)" },
+  sizeBtn: (active) => ({
+    padding: "3px 9px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    border: active ? "none" : "1px solid var(--border)",
+    background: active ? "#6366f1" : "transparent",
+    color: active ? "#fff" : "var(--text-secondary)",
+    fontSize: "11px",
+    fontWeight: active ? 700 : 500,
+    transition: "all 0.15s",
+    fontFamily: "'DM Sans',sans-serif",
+  }),
+
+  /* ── BOX VIEW ── */
+  boxGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill,minmax(230px,1fr))",
+    gap: "14px",
+    padding: "16px",
+  },
+  boxCard: {
+    borderRadius: "14px",
+    overflow: "hidden",
+    border: "1px solid var(--border)",
+    background: "var(--card-bg)",
+    transition: "transform 0.18s,box-shadow 0.18s,border-color 0.18s",
+    cursor: "default",
+  },
+  boxAccent: (color) => ({
+    height: "3px",
+    background: `linear-gradient(90deg,${color},${color}88)`,
+  }),
+  boxBody: { padding: "13px 14px" },
+  boxTop: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: "10px",
+  },
+  boxEmojiWrap: (bg, border) => ({
+    width: "38px",
+    height: "38px",
+    borderRadius: "10px",
+    background: bg,
+    border: `1px solid ${border}`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "18px",
+  }),
+  boxName: {
+    fontSize: "13px",
+    fontWeight: 700,
+    color: "var(--text-primary)",
+    marginBottom: "3px",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  boxNote: {
+    fontSize: "11px",
+    color: "var(--text-secondary)",
+    lineHeight: 1.4,
+    marginBottom: "10px",
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+  },
+  boxDivider: { borderTop: "1px solid var(--border)", margin: "10px 0" },
+  boxAmountVal: {
+    fontFamily: "'DM Mono',monospace",
+    fontSize: "16px",
+    fontWeight: 700,
+    color: "#6366f1",
+  },
+  boxAmountSub: {
+    fontSize: "10px",
+    color: "var(--text-secondary)",
+    marginTop: "1px",
+  },
+  boxFooter: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: "10px",
+    flexWrap: "wrap",
+    gap: "5px",
+  },
+  boxDate: { fontSize: "11px", color: "var(--text-secondary)" },
+
+  /* ── TABLE VIEW ── */
+  tableWrap: { overflowX: "auto" },
+  table: { width: "100%", borderCollapse: "collapse" },
+  th: {
+    padding: "10px 14px",
+    textAlign: "left",
+    fontSize: "11px",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    color: "var(--text-secondary)",
+    borderBottom: "1px solid var(--border)",
+    background: "var(--bg-primary)",
+    whiteSpace: "nowrap",
+  },
+  td: {
+    padding: "11px 14px",
+    borderBottom: "1px solid var(--border)",
+    verticalAlign: "middle",
+  },
+  tdName: { fontWeight: 700, fontSize: "13px", color: "var(--text-primary)" },
+  tdNote: {
+    fontSize: "11px",
+    color: "var(--text-secondary)",
+    marginTop: "2px",
+  },
+  tdAmount: {
+    fontFamily: "'DM Mono',monospace",
+    fontSize: "13px",
+    fontWeight: 700,
+    color: "#6366f1",
+  },
+  tdAmountSub: { fontSize: "11px", color: "var(--text-secondary)" },
+
+  /* ── ROW VIEW ── */
+  rowItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "13px",
+    padding: "12px 16px",
+    borderBottom: "1px solid var(--border)",
+    transition: "background 0.15s",
+  },
+  rowStripe: (color) => ({
+    width: "3px",
+    height: "36px",
+    borderRadius: "2px",
+    background: `linear-gradient(180deg,${color},${color}66)`,
+    flexShrink: 0,
+  }),
+  rowEmoji: {
+    fontSize: "20px",
+    width: "28px",
+    textAlign: "center",
+    flexShrink: 0,
+  },
+  rowBody: { flex: 1, minWidth: 0 },
+  rowName: {
+    fontSize: "13px",
+    fontWeight: 700,
+    color: "var(--text-primary)",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  rowNote: {
+    fontSize: "11px",
+    color: "var(--text-secondary)",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  rowAmount: {
+    fontFamily: "'DM Mono',monospace",
+    fontSize: "14px",
+    fontWeight: 700,
+    color: "#6366f1",
+    textAlign: "right",
+  },
+  rowAmountSub: {
+    fontSize: "10px",
+    color: "var(--text-secondary)",
+    textAlign: "right",
+  },
+  rowDate: {
+    fontSize: "11px",
+    color: "var(--text-secondary)",
+    minWidth: "76px",
+    textAlign: "right",
+  },
+};
+
+/* ─────────────────────────────────────────────
+   SMALL SHARED COMPONENTS
+───────────────────────────────────────────── */
+function CatBadge({ cat }) {
+  const m = CAT_META[cat] || CAT_META.other;
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        padding: "3px 9px",
+        borderRadius: "99px",
+        background: m.bg,
+        border: `1px solid ${m.border}`,
+        fontSize: "11px",
+        fontWeight: 700,
+        color: m.color,
+        fontFamily: "'DM Sans',sans-serif",
+        whiteSpace: "nowrap",
+        textTransform: "capitalize",
+      }}
+    >
+      {m.emoji} {cat}
+    </span>
+  );
+}
+
+function PayBadge({ method }) {
+  const m = PAY_META[method] || PAY_META.cash;
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        padding: "3px 9px",
+        borderRadius: "99px",
+        background: m.bg,
+        fontSize: "11px",
+        fontWeight: 700,
+        color: m.color,
+        fontFamily: "'DM Sans',sans-serif",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {m.icon} {m.label}
+    </span>
+  );
+}
+
+function ActionBtns({ e, onEdit, onDelete }) {
+  return (
+    <div style={{ display: "flex", gap: "2px" }}>
+      {[
+        { icon: "✏️", label: "Edit", fn: () => onEdit(e) },
+        { icon: "🗑️", label: "Delete", fn: () => onDelete(e._id) },
+      ].map(({ icon, label, fn }) => (
+        <button
+          key={label}
+          title={label}
+          onClick={fn}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: "4px 6px",
+            borderRadius: "7px",
+            fontSize: "13px",
+            color: "var(--text-secondary)",
+            transition: "background 0.12s",
+          }}
+          onMouseEnter={(ev) =>
+            (ev.currentTarget.style.background = "var(--bg-primary)")
+          }
+          onMouseLeave={(ev) => (ev.currentTarget.style.background = "none")}
+        >
+          {icon}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   STAT CARD
+───────────────────────────────────────────── */
+function StatCard({ label, value, sub, accent }) {
+  return (
+    <div style={{ ...S.statCard, borderTop: `3px solid ${accent}` }}>
+      <div style={S.statLabel}>{label}</div>
+      <div style={{ ...S.statVal, color: accent }}>{value}</div>
+      {sub && <div style={S.statSub}>{sub}</div>}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   MAIN PAGE
+───────────────────────────────────────────── */
 export default function ExpensesPage() {
   const { t, formatAmount, formatNum, language } = useApp();
+
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addModal, setAddModal] = useState(false);
@@ -179,13 +818,12 @@ export default function ExpensesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [banner, setBanner] = useState(null);
 
-  // Ref so handleModalSuccess always reads latest editData (avoids stale closure)
   const editDataRef = useRef(editData);
   useEffect(() => {
     editDataRef.current = editData;
   }, [editData]);
 
-  // ── Fetch from server (only on mount + filter change) ───────────────────
+  /* ── Fetch ── */
   const loadExpenses = async () => {
     setLoading(true);
     try {
@@ -211,27 +849,24 @@ export default function ExpensesPage() {
     setCurrentPage(1);
   }, [filterCat, filterMonth, filterYear, search, pageSize]);
 
-  // ── ADD / UPDATE without reload ─────────────────────────────────────────
+  /* ── CRUD helpers ── */
   const handleModalSuccess = (savedItem) => {
     if (!savedItem) {
       loadExpenses();
       return;
     }
     if (editDataRef.current) {
-      // UPDATE: replace in place
       setExpenses((prev) =>
         prev.map((e) => (e._id === savedItem._id ? savedItem : e)),
       );
       setBanner({ type: "update", title: t("updatedSuccess") });
     } else {
-      // ADD: prepend
       setExpenses((prev) => [savedItem, ...prev]);
       setCurrentPage(1);
       setBanner({ type: "success", title: t("addedSuccess") });
     }
   };
 
-  // ── DELETE without reload ───────────────────────────────────────────────
   const handleDelete = async () => {
     setDeleting(true);
     try {
@@ -240,17 +875,33 @@ export default function ExpensesPage() {
       setExpenses((prev) => prev.filter((e) => e._id !== deleteId));
       setDeleteId(null);
     } catch (err) {
-      setBanner({ type: "error", title: "Failed to load", sub: err.message });
+      setBanner({ type: "error", title: "Failed to delete", sub: err.message });
     } finally {
       setDeleting(false);
     }
   };
 
-  // ── Filtering + pagination ──────────────────────────────────────────────
+  const openEdit = (e) => {
+    setEditData(e);
+    setAddModal(true);
+  };
+
+  /* ── Filtering + pagination ── */
   const filtered = expenses.filter(
     (e) => !search || e.itemName?.toLowerCase().includes(search.toLowerCase()),
   );
   const totalUSD = filtered.reduce((s, e) => s + (e.amountUSD || 0), 0);
+  const maxItem = filtered.reduce(
+    (a, b) => (b.amountUSD > a.amountUSD ? b : a),
+    { amountUSD: 0 },
+  );
+  const avgUSD = filtered.length ? totalUSD / filtered.length : 0;
+  const topCatMap = {};
+  filtered.forEach((e) => {
+    topCatMap[e.category] = (topCatMap[e.category] || 0) + (e.amountUSD || 0);
+  });
+  const topCat = Object.entries(topCatMap).sort((a, b) => b[1] - a[1])[0];
+
   const isAll = pageSize === "All";
   const totalItems = filtered.length;
   const totalPages = isAll ? 1 : Math.max(1, Math.ceil(totalItems / pageSize));
@@ -263,7 +914,7 @@ export default function ExpensesPage() {
   const goPrev = () => goTo(safePage - 1);
   const goNext = () => goTo(safePage + 1);
 
-  const getPageNumbers = () => {
+  const getPageNums = () => {
     if (totalPages <= 7)
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     const pages = [];
@@ -283,41 +934,75 @@ export default function ExpensesPage() {
     return pages;
   };
 
-  // ── Shared action buttons ───────────────────────────────────────────────
-  const ActionBtns = ({ e }) => (
-    <div className="flex gap-1">
-      <button
-        className="btn btn-ghost p-2 text-sm"
-        title={t("edit")}
-        onClick={() => {
-          setEditData(e);
-          setAddModal(true);
-        }}
-      >
-        ✏️
-      </button>
-      <button
-        className="btn btn-ghost p-2 text-sm"
-        title={t("delete")}
-        onClick={() => setDeleteId(e._id)}
-      >
-        🗑️
-      </button>
+  /* ── VIEW: BOX ── */
+  const BoxView = () => (
+    <div style={S.boxGrid}>
+      {paginated.map((e) => {
+        const cm = CAT_META[e.category] || CAT_META.other;
+        return (
+          <div
+            key={e._id}
+            style={S.boxCard}
+            onMouseEnter={(ev) => {
+              ev.currentTarget.style.transform = "translateY(-3px)";
+              ev.currentTarget.style.boxShadow = "0 8px 28px rgba(0,0,0,0.12)";
+              ev.currentTarget.style.borderColor = cm.border;
+            }}
+            onMouseLeave={(ev) => {
+              ev.currentTarget.style.transform = "none";
+              ev.currentTarget.style.boxShadow = "none";
+              ev.currentTarget.style.borderColor = "var(--border)";
+            }}
+          >
+            <div style={S.boxAccent(cm.color)} />
+            <div style={S.boxBody}>
+              <div style={S.boxTop}>
+                <div style={S.boxEmojiWrap(cm.bg, cm.border)}>{cm.emoji}</div>
+                <ActionBtns e={e} onEdit={openEdit} onDelete={setDeleteId} />
+              </div>
+              <div style={S.boxName} title={e.itemName}>
+                {e.itemName}
+              </div>
+              {e.noted && <div style={S.boxNote}>{e.noted}</div>}
+              <div style={S.boxDivider} />
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div>
+                  <div style={S.boxAmountVal}>
+                    {formatAmount(e.amountUSD, e.amountKHR)}
+                  </div>
+                  <div style={S.boxAmountSub}>
+                    {e.currency === "KHR"
+                      ? `${e.amount?.toLocaleString()} ៛`
+                      : `$${e.amount}`}
+                  </div>
+                </div>
+                <CatBadge cat={e.category} />
+              </div>
+              <div style={S.boxFooter}>
+                <PayBadge method={e.paymentMethod} />
+                <span style={S.boxDate}>
+                  {formatDate(e.date, language, "medium")}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
-  // ── TABLE VIEW ──────────────────────────────────────────────────────────
+  /* ── VIEW: TABLE ── */
   const TableView = () => (
-    <div className="overflow-x-auto">
-      <table
-        className="w-full"
-        style={{
-          borderCollapse: "collapse",
-          border: "1px solid var(--border)",
-        }}
-      >
+    <div style={S.tableWrap}>
+      <table style={S.table}>
         <thead>
-          <tr style={{ background: "var(--bg-primary)" }}>
+          <tr>
             {[
               "",
               t("itemName"),
@@ -328,363 +1013,150 @@ export default function ExpensesPage() {
               t("quantity"),
               "",
             ].map((h, i) => (
-              <th
-                key={i}
-                className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide"
-                style={{
-                  color: "var(--text-secondary)",
-                  border: "1px solid var(--border)",
-                  background: "var(--bg-primary)",
-                  whiteSpace: "nowrap",
-                }}
-              >
+              <th key={i} style={S.th}>
                 {h}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {paginated.map((e, idx) => (
-            <tr
-              key={e._id}
-              className="transition-colors"
-              style={{
-                background: idx % 2 === 0 ? "transparent" : "var(--bg-primary)",
-              }}
-              onMouseEnter={(ev) => (ev.currentTarget.style.opacity = "0.85")}
-              onMouseLeave={(ev) => (ev.currentTarget.style.opacity = "1")}
-            >
-              <td
-                className="px-4 py-3 text-xl"
-                style={{ border: "1px solid var(--border)" }}
-              >
-                {e.categoryEmoji}
-              </td>
-              <td
-                className="px-4 py-3"
-                style={{ border: "1px solid var(--border)" }}
-              >
-                <div
-                  className="font-semibold text-sm"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {e.itemName}
-                </div>
-                {e.noted && (
-                  <div
-                    className="text-xs mt-0.5 truncate max-w-xs"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {e.noted}
-                  </div>
-                )}
-              </td>
-              <td
-                className="px-4 py-3"
-                style={{ border: "1px solid var(--border)" }}
-              >
-                <span className="badge badge-planned">{t(e.category)}</span>
-              </td>
-              <td
-                className="px-4 py-3"
-                style={{ border: "1px solid var(--border)" }}
-              >
-                <div className="font-bold text-sm" style={{ color: "#6366f1" }}>
-                  {formatAmount(e.amountUSD, e.amountKHR)}
-                </div>
-                <div
-                  className="text-xs"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {e.currency === "KHR"
-                    ? `${e.amount?.toLocaleString()} ៛`
-                    : `$${e.amount}`}
-                </div>
-              </td>
-              <td
-                className="px-4 py-3 text-sm"
+          {paginated.map((e, idx) => {
+            const cm = CAT_META[e.category] || CAT_META.other;
+            return (
+              <tr
+                key={e._id}
                 style={{
-                  color: "var(--text-secondary)",
-                  border: "1px solid var(--border)",
-                  whiteSpace: "nowrap",
+                  background:
+                    idx % 2 === 0 ? "transparent" : "var(--bg-primary)",
                 }}
+                onMouseEnter={(ev) =>
+                  (ev.currentTarget.style.background = `${cm.bg}`)
+                }
+                onMouseLeave={(ev) =>
+                  (ev.currentTarget.style.background =
+                    idx % 2 === 0 ? "transparent" : "var(--bg-primary)")
+                }
               >
-                {formatDate(e.date, language, "medium")}
-              </td>
-              <td
-                className="px-4 py-3"
-                style={{ border: "1px solid var(--border)" }}
-              >
-                <span
-                  className={`badge ${e.paymentMethod === "qr" ? "badge-completed" : "badge-planned"}`}
-                >
-                  {e.paymentMethod === "qr"
-                    ? "📱"
-                    : e.paymentMethod === "cash"
-                      ? "💵"
-                      : e.paymentMethod === "card"
-                        ? "💳"
-                        : "🔄"}{" "}
-                  {t(e.paymentMethod)}
-                </span>
-                {e.imageQr && (
-                  <div className="mt-1">
-                    <img
-                      src={e.imageQr}
-                      alt="QR"
-                      className="w-8 h-8 rounded object-cover"
-                    />
+                <td style={{ ...S.td, fontSize: "20px", width: "44px" }}>
+                  {cm.emoji}
+                </td>
+                <td style={S.td}>
+                  <div style={S.tdName}>{e.itemName}</div>
+                  {e.noted && <div style={S.tdNote}>{e.noted}</div>}
+                </td>
+                <td style={S.td}>
+                  <CatBadge cat={e.category} />
+                </td>
+                <td style={S.td}>
+                  <div style={S.tdAmount}>
+                    {formatAmount(e.amountUSD, e.amountKHR)}
                   </div>
-                )}
-              </td>
-              <td
-                className="px-4 py-3 text-sm text-center"
-                style={{
-                  color: "var(--text-secondary)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                {e.quantity}
-              </td>
-              <td
-                className="px-4 py-3"
-                style={{ border: "1px solid var(--border)" }}
-              >
-                <ActionBtns e={e} />
-              </td>
-            </tr>
-          ))}
+                  <div style={S.tdAmountSub}>
+                    {e.currency === "KHR"
+                      ? `${e.amount?.toLocaleString()} ៛`
+                      : `$${e.amount}`}
+                  </div>
+                </td>
+                <td
+                  style={{
+                    ...S.td,
+                    whiteSpace: "nowrap",
+                    fontSize: "12px",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  {formatDate(e.date, language, "medium")}
+                </td>
+                <td style={S.td}>
+                  <PayBadge method={e.paymentMethod} />
+                </td>
+                <td
+                  style={{
+                    ...S.td,
+                    textAlign: "center",
+                    fontSize: "12px",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  {e.quantity ?? 1}
+                </td>
+                <td style={S.td}>
+                  <ActionBtns e={e} onEdit={openEdit} onDelete={setDeleteId} />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
 
-  // ── BOX VIEW ────────────────────────────────────────────────────────────
-  const BoxView = () => (
-    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {paginated.map((e) => (
-        <div
-          key={e._id}
-          className="rounded-xl overflow-hidden transition-all duration-200"
-          style={{
-            border: "1px solid var(--border)",
-            background: "var(--bg-secondary)",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          }}
-          onMouseEnter={(ev) => {
-            ev.currentTarget.style.transform = "translateY(-2px)";
-            ev.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.12)";
-          }}
-          onMouseLeave={(ev) => {
-            ev.currentTarget.style.transform = "translateY(0)";
-            ev.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)";
-          }}
-        >
-          <div
-            style={{
-              height: "3px",
-              background: "linear-gradient(90deg, #6366f1, #4f46e5)",
-            }}
-          />
-          <div className="p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{e.categoryEmoji}</span>
-                <span className="badge badge-planned text-xs">
-                  {t(e.category)}
-                </span>
-              </div>
-              <ActionBtns e={e} />
-            </div>
-            <div
-              className="font-bold text-sm mb-0.5"
-              style={{ color: "var(--text-primary)" }}
-            >
-              {e.itemName}
-            </div>
-            {e.noted && (
-              <div
-                className="text-xs mb-2 line-clamp-2"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {e.noted}
-              </div>
-            )}
-            <div
-              style={{ borderTop: "1px solid var(--border)", margin: "10px 0" }}
-            />
-            <div className="flex items-center justify-between mb-2">
-              <span
-                className="text-xs font-medium"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {t("amount")}
-              </span>
-              <div className="text-right">
-                <div className="font-bold text-sm" style={{ color: "#6366f1" }}>
-                  {formatAmount(e.amountUSD, e.amountKHR)}
-                </div>
-                <div
-                  className="text-xs"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {e.currency === "KHR"
-                    ? `${e.amount?.toLocaleString()} ៛`
-                    : `$${e.amount}`}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 flex-wrap">
-                <span
-                  className={`badge text-xs ${e.paymentMethod === "qr" ? "badge-completed" : "badge-planned"}`}
-                >
-                  {e.paymentMethod === "qr"
-                    ? "📱"
-                    : e.paymentMethod === "cash"
-                      ? "💵"
-                      : e.paymentMethod === "card"
-                        ? "💳"
-                        : "🔄"}{" "}
-                  {t(e.paymentMethod)}
-                </span>
-                {e.quantity > 1 && (
-                  <span
-                    className="text-xs px-1.5 py-0.5 rounded"
-                    style={{
-                      background: "var(--bg-primary)",
-                      color: "var(--text-secondary)",
-                    }}
-                  >
-                    ×{e.quantity}
-                  </span>
-                )}
-              </div>
-              <span
-                className="text-xs"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {formatDate(e.date, language, "medium")}
-              </span>
-            </div>
-            {e.imageQr && (
-              <img
-                src={e.imageQr}
-                alt="QR"
-                className="w-10 h-10 rounded mt-2 object-cover"
-              />
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  // ── ROW VIEW ────────────────────────────────────────────────────────────
+  /* ── VIEW: ROW ── */
   const RowView = () => (
-    <div style={{ borderTop: "1px solid var(--border)" }}>
-      {paginated.map((e) => (
-        <div
-          key={e._id}
-          className="flex items-center gap-4 px-5 py-3.5 transition-colors"
-          style={{ borderBottom: "1px solid var(--border)" }}
-          onMouseEnter={(ev) =>
-            (ev.currentTarget.style.background = "var(--bg-primary)")
-          }
-          onMouseLeave={(ev) =>
-            (ev.currentTarget.style.background = "transparent")
-          }
-        >
+    <div>
+      {paginated.map((e) => {
+        const cm = CAT_META[e.category] || CAT_META.other;
+        return (
           <div
-            style={{
-              width: "3px",
-              height: "36px",
-              borderRadius: "2px",
-              background: "linear-gradient(180deg, #6366f1, #4f46e5)",
-              flexShrink: 0,
-            }}
-          />
-          <span className="text-xl flex-shrink-0 w-8 text-center">
-            {e.categoryEmoji}
-          </span>
-          <div className="flex-1 min-w-0">
+            key={e._id}
+            style={S.rowItem}
+            onMouseEnter={(ev) =>
+              (ev.currentTarget.style.background = "var(--bg-primary)")
+            }
+            onMouseLeave={(ev) =>
+              (ev.currentTarget.style.background = "transparent")
+            }
+          >
+            <div style={S.rowStripe(cm.color)} />
+            <span style={S.rowEmoji}>{cm.emoji}</span>
+            <div style={S.rowBody}>
+              <div style={S.rowName}>{e.itemName}</div>
+              {e.noted && <div style={S.rowNote}>{e.noted}</div>}
+            </div>
+            <div className="hide-sm">
+              <CatBadge cat={e.category} />
+            </div>
+            <div className="hide-md">
+              <PayBadge method={e.paymentMethod} />
+            </div>
+            <div style={S.rowDate} className="hide-sm">
+              {formatDate(e.date, language, "medium")}
+            </div>
             <div
-              className="font-semibold text-sm"
-              style={{ color: "var(--text-primary)" }}
+              style={{ flexShrink: 0, textAlign: "right", minWidth: "72px" }}
             >
-              {e.itemName}
-            </div>
-            {e.noted && (
-              <div
-                className="text-xs truncate"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {e.noted}
+              <div style={S.rowAmount}>
+                {formatAmount(e.amountUSD, e.amountKHR)}
               </div>
-            )}
-          </div>
-          <span className="badge badge-planned text-xs hidden sm:inline-flex flex-shrink-0">
-            {t(e.category)}
-          </span>
-          <span
-            className={`badge text-xs hidden md:inline-flex flex-shrink-0 ${e.paymentMethod === "qr" ? "badge-completed" : "badge-planned"}`}
-          >
-            {e.paymentMethod === "qr"
-              ? "📱"
-              : e.paymentMethod === "cash"
-                ? "💵"
-                : e.paymentMethod === "card"
-                  ? "💳"
-                  : "🔄"}{" "}
-            {t(e.paymentMethod)}
-          </span>
-          {e.quantity > 1 && (
-            <span
-              className="text-xs flex-shrink-0 hidden lg:block"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              ×{e.quantity}
-            </span>
-          )}
-          <span
-            className="text-xs flex-shrink-0 hidden sm:block w-24 text-right"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            {formatDate(e.date, language, "medium")}
-          </span>
-          <div className="flex-shrink-0 text-right w-24">
-            <div className="font-bold text-sm" style={{ color: "#6366f1" }}>
-              {formatAmount(e.amountUSD, e.amountKHR)}
+              <div style={S.rowAmountSub}>
+                {e.currency === "KHR"
+                  ? `${e.amount?.toLocaleString()} ៛`
+                  : `$${e.amount}`}
+              </div>
             </div>
-            <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
-              {e.currency === "KHR"
-                ? `${e.amount?.toLocaleString()} ៛`
-                : `$${e.amount}`}
-            </div>
+            <ActionBtns e={e} onEdit={openEdit} onDelete={setDeleteId} />
           </div>
-          <div className="flex-shrink-0">
-            <ActionBtns e={e} />
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 
-  // ── PAGINATION BAR ──────────────────────────────────────────────────────
+  /* ── PAGINATION ── */
   const PaginationBar = () => {
     if (totalItems === 0) return null;
     const rangeStart = isAll ? 1 : startIdx + 1;
     const rangeEnd = isAll ? totalItems : endIdx;
     return (
-      <div
-        className="flex items-center justify-between flex-wrap gap-3 px-4 py-3"
-        style={{
-          borderTop: "1px solid var(--border)",
-          background: "var(--bg-primary)",
-        }}
-      >
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+      <div style={S.pgBar}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={S.pgInfo}>
             Showing{" "}
             <strong style={{ color: "var(--text-primary)" }}>
               {rangeStart}–{rangeEnd}
@@ -694,90 +1166,35 @@ export default function ExpensesPage() {
               {totalItems}
             </strong>
           </span>
-          <div className="flex items-center gap-1">
-            <span
-              className="text-xs"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Show:
-            </span>
-            <div
-              className="flex items-center gap-0.5 p-0.5 rounded-lg"
-              style={{
-                background: "var(--bg-secondary)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              {PAGE_SIZE_OPTIONS.map((opt) => {
-                const active = pageSize === opt;
-                return (
-                  <button
-                    key={opt}
-                    onClick={() => {
-                      setPageSize(opt);
-                      setCurrentPage(1);
-                    }}
-                    style={{
-                      padding: "3px 9px",
-                      borderRadius: "6px",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "11px",
-                      fontWeight: active ? "700" : "500",
-                      transition: "all 0.15s ease",
-                      color: active ? "#fff" : "var(--text-secondary)",
-                      background: active
-                        ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)"
-                        : "transparent",
-                      boxShadow: active
-                        ? "0 2px 6px rgba(99,102,241,0.3)"
-                        : "none",
-                    }}
-                  >
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
+          <div style={S.sizeRow}>
+            <span style={S.sizeLabel}>Show:</span>
+            {PAGE_SIZE_OPTIONS.map((opt) => (
+              <button
+                key={opt}
+                style={S.sizeBtn(pageSize === opt)}
+                onClick={() => {
+                  setPageSize(opt);
+                  setCurrentPage(1);
+                }}
+              >
+                {opt}
+              </button>
+            ))}
           </div>
         </div>
         {!isAll && totalPages > 1 && (
-          <div className="flex items-center gap-1">
+          <div style={S.pgBtns}>
             <button
+              style={S.pgBtn(false, safePage === 1)}
               onClick={goPrev}
               disabled={safePage === 1}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "5px 10px",
-                borderRadius: "7px",
-                border: "1px solid var(--border)",
-                cursor: safePage === 1 ? "not-allowed" : "pointer",
-                fontSize: "12px",
-                fontWeight: "500",
-                background: "var(--bg-secondary)",
-                color:
-                  safePage === 1
-                    ? "var(--text-secondary)"
-                    : "var(--text-primary)",
-                opacity: safePage === 1 ? 0.4 : 1,
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(ev) => {
-                if (safePage !== 1)
-                  ev.currentTarget.style.borderColor = "#6366f1";
-              }}
-              onMouseLeave={(ev) => {
-                ev.currentTarget.style.borderColor = "var(--border)";
-              }}
             >
               ← Prev
             </button>
-            {getPageNumbers().map((p, i) =>
+            {getPageNums().map((p, i) =>
               p === "…" ? (
                 <span
-                  key={`e-${i}`}
+                  key={`e${i}`}
                   style={{
                     padding: "5px 4px",
                     fontSize: "12px",
@@ -789,67 +1206,17 @@ export default function ExpensesPage() {
               ) : (
                 <button
                   key={p}
+                  style={S.pgBtn(safePage === p, false)}
                   onClick={() => goTo(p)}
-                  style={{
-                    minWidth: "32px",
-                    padding: "5px 8px",
-                    borderRadius: "7px",
-                    border: safePage === p ? "none" : "1px solid var(--border)",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    fontWeight: safePage === p ? "700" : "500",
-                    transition: "all 0.15s ease",
-                    color: safePage === p ? "#fff" : "var(--text-primary)",
-                    background:
-                      safePage === p
-                        ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)"
-                        : "var(--bg-secondary)",
-                    boxShadow:
-                      safePage === p
-                        ? "0 2px 8px rgba(99,102,241,0.35)"
-                        : "none",
-                  }}
-                  onMouseEnter={(ev) => {
-                    if (safePage !== p)
-                      ev.currentTarget.style.borderColor = "#6366f1";
-                  }}
-                  onMouseLeave={(ev) => {
-                    if (safePage !== p)
-                      ev.currentTarget.style.borderColor = "var(--border)";
-                  }}
                 >
                   {p}
                 </button>
               ),
             )}
             <button
+              style={S.pgBtn(false, safePage === totalPages)}
               onClick={goNext}
               disabled={safePage === totalPages}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "5px 10px",
-                borderRadius: "7px",
-                border: "1px solid var(--border)",
-                cursor: safePage === totalPages ? "not-allowed" : "pointer",
-                fontSize: "12px",
-                fontWeight: "500",
-                background: "var(--bg-secondary)",
-                color:
-                  safePage === totalPages
-                    ? "var(--text-secondary)"
-                    : "var(--text-primary)",
-                opacity: safePage === totalPages ? 0.4 : 1,
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(ev) => {
-                if (safePage !== totalPages)
-                  ev.currentTarget.style.borderColor = "#6366f1";
-              }}
-              onMouseLeave={(ev) => {
-                ev.currentTarget.style.borderColor = "var(--border)";
-              }}
             >
               Next →
             </button>
@@ -859,173 +1226,245 @@ export default function ExpensesPage() {
     );
   };
 
-  // ── RENDER ──────────────────────────────────────────────────────────────
+  /* ── RENDER ── */
   return (
-    <div className="space-y-5 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1
-            className="font-display font-bold text-2xl"
-            style={{ color: "var(--text-primary)" }}
-          >
-            💸 {t("expenses")}
-          </h1>
-          <p
-            className="text-sm mt-0.5"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            {t("total")}: {formatAmount(totalUSD)} ·{" "}
-            {formatNum(filtered.length)} {t("items")}
-          </p>
-        </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setEditData(null);
-            setAddModal(true);
-          }}
-        >
-          + {t("addNew")}
-        </button>
-      </div>
+    <>
+      {/* Keyframe injection */}
+      <style>{`
+        @keyframes epFadeUp {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: none; }
+        }
+        .ep-add-btn:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 28px rgba(99,102,241,0.45) !important; }
+        @media (max-width: 900px) {
+          .ep-stat-bar  { grid-template-columns: repeat(2,1fr) !important; }
+          .ep-filter-grid { grid-template-columns: 1fr 1fr !important; }
+          .ep-box-grid  { grid-template-columns: repeat(auto-fill,minmax(180px,1fr)) !important; }
+        }
+        @media (max-width: 580px) {
+          .ep-filter-grid { grid-template-columns: 1fr !important; }
+          .ep-box-grid    { grid-template-columns: 1fr 1fr !important; }
+          .hide-sm  { display: none !important; }
+        }
+        @media (max-width: 400px) {
+          .ep-box-grid { grid-template-columns: 1fr !important; }
+          .hide-md { display: none !important; }
+        }
+      `}</style>
 
-      {/* Filters */}
-      <div className="card p-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <input
-            type="text"
-            placeholder={t("search")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="form-input"
-          />
-          <select
-            value={filterCat}
-            onChange={(e) => setFilterCat(e.target.value)}
-            className="form-input"
-          >
-            <option value="">{t("allCategories")}</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {t(c)}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            className="form-input"
-          >
-            <option value="">{t("allMonths")}</option>
-            {MONTHS_EN.map((m, i) => (
-              <option key={m} value={i + 1}>
-                {m}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filterYear}
-            onChange={(e) => setFilterYear(e.target.value)}
-            className="form-input"
-          >
-            <option value="">All Years</option>
-            {[2024, 2025, 2026, 2027, 2028].map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Main card */}
-      <div className="card overflow-hidden">
-        {/* View toggle bar */}
-        <div
-          className="flex items-center justify-between px-4 py-3"
-          style={{
-            borderBottom: "1px solid var(--border)",
-            background: "var(--bg-primary)",
-          }}
-        >
-          <span
-            className="text-xs font-semibold uppercase tracking-widest"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            {formatNum(filtered.length)} {t("items")}
-          </span>
-          <div
-            className="flex items-center gap-0.5 p-1 rounded-lg"
-            style={{
-              background: "var(--bg-secondary)",
-              border: "1px solid var(--border)",
+      <div style={S.page}>
+        {/* ── HEADER ── */}
+        <div style={S.header}>
+          <div>
+            <h1 style={S.h1}>💸 {t("expenses")}</h1>
+            <p style={S.hsub}>
+              {t("total")}: {formatAmount(totalUSD)} ·{" "}
+              {formatNum(filtered.length)} {t("items")}
+            </p>
+          </div>
+          <button
+            className="ep-add-btn"
+            style={S.addBtn}
+            onClick={() => {
+              setEditData(null);
+              setAddModal(true);
             }}
           >
-            {VIEW_MODES.map(({ key, label, Icon }) => {
-              const active = viewMode === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setViewMode(key)}
-                  title={label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "5px 12px",
-                    borderRadius: "7px",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    fontWeight: active ? "700" : "500",
-                    transition: "all 0.18s ease",
-                    color: active ? "#fff" : "var(--text-secondary)",
-                    background: active
-                      ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)"
-                      : "transparent",
-                    boxShadow: active
-                      ? "0 2px 8px rgba(99,102,241,0.35)"
-                      : "none",
-                  }}
-                >
-                  <Icon />
-                  <span className="hidden sm:inline">{label}</span>
-                </button>
-              );
-            })}
+            <IcPlus /> {t("addNew")}
+          </button>
+        </div>
+
+        {/* ── STAT BAR ── */}
+        <div className="ep-stat-bar" style={S.statBar}>
+          <StatCard
+            label="Total spent"
+            value={formatAmount(totalUSD)}
+            sub={`${filtered.length} transactions`}
+            accent="#6366f1"
+          />
+          <StatCard
+            label="Largest item"
+            value={formatAmount(maxItem.amountUSD)}
+            sub={maxItem.itemName || "—"}
+            accent="#f59e0b"
+          />
+          <StatCard
+            label="Average spend"
+            value={filtered.length ? formatAmount(avgUSD) : "—"}
+            sub="per transaction"
+            accent="#10b981"
+          />
+          <StatCard
+            label="Top category"
+            value={
+              topCat
+                ? `${CAT_META[topCat[0]]?.emoji || "📦"} ${topCat[0]}`
+                : "—"
+            }
+            sub={topCat ? formatAmount(topCat[1]) : "—"}
+            accent={
+              topCat ? CAT_META[topCat[0]]?.color || "#64748b" : "#64748b"
+            }
+          />
+        </div>
+
+        {/* ── FILTERS ── */}
+        <div style={S.filterPanel}>
+          <div className="ep-filter-grid" style={S.filterGrid}>
+            <div style={S.searchWrap}>
+              <span style={S.searchIcon}>
+                <IcSearch />
+              </span>
+              <input
+                type="text"
+                placeholder={t("search")}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={S.searchInput}
+                onFocus={(ev) => {
+                  ev.target.style.borderColor = "#6366f1";
+                  ev.target.style.boxShadow = "0 0 0 3px rgba(99,102,241,0.12)";
+                }}
+                onBlur={(ev) => {
+                  ev.target.style.borderColor = "var(--border)";
+                  ev.target.style.boxShadow = "none";
+                }}
+              />
+            </div>
+            <select
+              value={filterCat}
+              onChange={(e) => setFilterCat(e.target.value)}
+              style={S.select}
+            >
+              <option value="">{t("allCategories")}</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {CAT_META[c]?.emoji} {t(c)}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              style={S.select}
+            >
+              <option value="">{t("allMonths")}</option>
+              {MONTHS_EN.map((m, i) => (
+                <option key={m} value={i + 1}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+              style={S.select}
+            >
+              <option value="">All Years</option>
+              {[2024, 2025, 2026, 2027, 2028].map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Content */}
-        {loading ? (
-          <div
-            className="p-8 text-center text-sm"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            {t("loading")}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="text-4xl mb-3">🧾</div>
+        {/* ── MAIN CARD ── */}
+        <div style={S.mainCard}>
+          {/* toolbar */}
+          <div style={S.toolbar}>
+            <span style={S.toolbarLeft}>
+              <strong style={{ color: "var(--text-primary)" }}>
+                {formatNum(filtered.length)}
+              </strong>{" "}
+              {t("items")}
+            </span>
             <div
-              className="font-semibold"
-              style={{ color: "var(--text-secondary)" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                flexWrap: "wrap",
+              }}
             >
-              {t("noExpenses")}
+              {/* size picker */}
+              <div style={S.sizeRow}>
+                <span style={S.sizeLabel}>Show:</span>
+                {PAGE_SIZE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt}
+                    style={S.sizeBtn(pageSize === opt)}
+                    onClick={() => {
+                      setPageSize(opt);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+              {/* view toggle */}
+              <div style={S.viewToggle}>
+                {[
+                  { key: "box", label: "Box", Icon: IcBox },
+                  { key: "table", label: "Table", Icon: IcTable },
+                  { key: "row", label: "Row", Icon: IcRow },
+                ].map(({ key, label, Icon }) => (
+                  <button
+                    key={key}
+                    style={S.viewBtn(viewMode === key)}
+                    onClick={() => setViewMode(key)}
+                    title={label}
+                  >
+                    <Icon active={viewMode === key} />
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        ) : (
-          <>
-            {viewMode === "box" && <BoxView />}
-            {viewMode === "table" && <TableView />}
-            {viewMode === "row" && <RowView />}
-            <PaginationBar />
-          </>
-        )}
+
+          {/* content */}
+          {loading ? (
+            <div
+              style={{
+                padding: "56px 16px",
+                textAlign: "center",
+                color: "var(--text-secondary)",
+                fontSize: "14px",
+              }}
+            >
+              {t("loading")}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={S.empty}>
+              <div style={{ fontSize: "40px", marginBottom: "12px" }}>🧾</div>
+              <div
+                style={{
+                  fontWeight: 700,
+                  color: "var(--text-primary)",
+                  marginBottom: "4px",
+                }}
+              >
+                {t("noExpenses")}
+              </div>
+              <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                Try adjusting your filters
+              </div>
+            </div>
+          ) : (
+            <>
+              {viewMode === "box" && <BoxView />}
+              {viewMode === "table" && <TableView />}
+              {viewMode === "row" && <RowView />}
+              <PaginationBar />
+            </>
+          )}
+        </div>
       </div>
 
-      {/* ── KEY CHANGE: onSuccess={handleModalSuccess} not onSuccess={loadExpenses} ── */}
+      {/* ── MODALS ── */}
       <ExpenseModal
         isOpen={addModal}
         onClose={() => {
@@ -1041,8 +1480,7 @@ export default function ExpensesPage() {
         onConfirm={handleDelete}
         loading={deleting}
       />
-
       <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
-    </div>
+    </>
   );
 }
