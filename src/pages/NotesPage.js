@@ -4,14 +4,19 @@ import api from "../utils/api";
 // ── Note API ──────────────────────────────────────────────────
 const noteAPI = {
   getAll: () => api.get("/notes"),
-  create: (data) => api.post("/notes", data),
-  update: (id, data) => api.put(`/notes/${id}`, data),
+  create: (formData) =>
+    api.post("/notes", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  update: (id, formData) =>
+    api.put(`/notes/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
   delete: (id) => api.delete(`/notes/${id}`),
   togglePin: (id) => api.patch(`/notes/${id}/pin`),
 };
 
 // ── Color / label system ──────────────────────────────────────
-// Keys MUST match backend enum: yellow | blue | green | pink | purple | white
 const COLOR_MAP = {
   yellow: {
     bg: "var(--card-bg)",
@@ -76,9 +81,7 @@ function timeAgo(dateStr) {
 const injectStyles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
-
     .notes-page * { box-sizing: border-box; }
-
     .notes-page ::placeholder { color: var(--text-secondary) !important; opacity: 0.5; }
 
     @keyframes notes-dropIn  { from{transform:translateY(-8px);opacity:0} to{transform:translateY(0);opacity:1} }
@@ -87,92 +90,168 @@ const injectStyles = () => (
     @keyframes notes-spin    { to{transform:rotate(360deg)} }
     @keyframes notes-blink   { 0%,100%{opacity:1} 50%{opacity:0} }
     @keyframes notes-toastIn { from{transform:translateX(-50%) translateY(10px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+    @keyframes notes-lbIn    { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
 
     .note-card {
-      border-radius: 8px;
-      padding: 16px;
-      position: relative;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      break-inside: avoid;
-      margin-bottom: 10px;
-      border: 1px solid var(--border);
-      border-left-width: 3px;
-      background: var(--card-bg);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      border-radius: 8px; padding: 16px; position: relative; cursor: pointer;
+      transition: all 0.15s ease; break-inside: avoid; margin-bottom: 10px;
+      border: 1px solid var(--border); border-left-width: 3px;
+      background: var(--card-bg); box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
-    .note-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    }
+    .note-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
 
     .tact-btn {
-      border-radius: 6px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.12s;
-      white-space: nowrap;
-      border: 1px solid transparent;
+      border-radius: 6px; font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      font-size: 12px; cursor: pointer; display: flex; align-items: center;
+      gap: 6px; transition: all 0.12s; white-space: nowrap; border: 1px solid transparent;
     }
     .tact-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .notes-input {
-      width: 100%;
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-primary);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      outline: none;
-      padding: 10px 12px;
-      transition: border-color 0.12s;
-      box-sizing: border-box;
+      width: 100%; background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; outline: none; padding: 10px 12px; transition: border-color 0.12s; box-sizing: border-box;
     }
 
     .filter-chip {
-      padding: 5px 12px;
-      border-radius: 4px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-      transition: all 0.1s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text-secondary);
+      padding: 5px 12px; border-radius: 4px; font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em; cursor: pointer;
+      transition: all 0.1s; display: flex; align-items: center; gap: 5px;
+      border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
     }
     .filter-chip:hover { background: var(--bg-primary); color: var(--text-primary); }
     .filter-chip.active { background: var(--bg-primary); }
 
     .icon-btn {
-      width: 26px; height: 26px;
-      border: 1px solid transparent;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.1s;
-      background: transparent;
-      color: var(--text-secondary);
+      width: 26px; height: 26px; border: 1px solid transparent; border-radius: 4px;
+      cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.1s; background: transparent; color: var(--text-secondary);
     }
     .icon-btn:hover { border-color: currentColor; }
     .icon-btn.danger:hover { color: #ef4444; }
     .icon-btn.pin:hover    { color: #f59e0b; }
     .icon-btn.edit:hover   { color: var(--text-primary); }
+
+    /* Image thumbnails on card */
+    .note-img-thumb {
+      width: 52px; height: 52px; object-fit: cover; border-radius: 5px;
+      border: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .note-img-thumb:hover { transform: scale(1.06); border-color: currentColor; box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+
+    /* Upload drop zone */
+    .img-dropzone {
+      border: 1.5px dashed var(--border); border-radius: 6px; padding: 18px 14px;
+      text-align: center; cursor: pointer; transition: all 0.15s;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--text-secondary); background: transparent;
+    }
+    .img-dropzone:hover, .img-dropzone.drag { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.04); }
+    .img-dropzone input { display: none; }
+
+    /* Modal image preview */
+    .modal-img-preview {
+      width: 72px; height: 72px; object-fit: cover; border-radius: 6px;
+      border: 1px solid var(--border); flex-shrink: 0; display: block;
+    }
+
+    /* Lightbox */
+    .lightbox-overlay {
+      position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
+      animation: notes-fadeIn 0.15s ease;
+    }
+    .lightbox-img {
+      max-width: min(90vw, 900px); max-height: 85vh; border-radius: 8px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+      animation: notes-lbIn 0.2s cubic-bezier(.34,1.2,.64,1);
+      object-fit: contain;
+    }
+    .lightbox-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; border-radius: 6px; width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 18px; transition: background 0.12s;
+    }
+    .lightbox-nav:hover { background: rgba(255,255,255,0.15); }
+    .lightbox-close {
+      position: absolute; top: 20px; right: 20px;
+      background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; border-radius: 6px; width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 14px; transition: background 0.12s;
+    }
+    .lightbox-close:hover { background: rgba(239,68,68,0.5); }
+    .lightbox-counter {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: rgba(255,255,255,0.5); letter-spacing: 0.1em;
+    }
   `}</style>
 );
+
+// ── Lightbox ──────────────────────────────────────────────────
+function Lightbox({ images, startIndex, onClose }) {
+  const [idx, setIdx] = useState(startIndex);
+  const prev = () => setIdx((i) => (i - 1 + images.length) % images.length);
+  const next = () => setIdx((i) => (i + 1) % images.length);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  return (
+    <div className="lightbox-overlay" onClick={onClose}>
+      <button className="lightbox-close" onClick={onClose}>
+        ✕
+      </button>
+
+      <img
+        className="lightbox-img"
+        src={images[idx].url}
+        alt={`Image ${idx + 1}`}
+        onClick={(e) => e.stopPropagation()}
+      />
+
+      {images.length > 1 && (
+        <>
+          <button
+            className="lightbox-nav"
+            style={{ left: 16 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              prev();
+            }}
+          >
+            ‹
+          </button>
+          <button
+            className="lightbox-nav"
+            style={{ right: 16 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              next();
+            }}
+          >
+            ›
+          </button>
+          <div className="lightbox-counter">
+            {idx + 1} / {images.length}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 // ── Tag badge ─────────────────────────────────────────────────
 function TagBadge({ tag, color }) {
@@ -200,169 +279,373 @@ function NoteCard({ note, onEdit, onDelete, onPin, index }) {
   const c = COLOR_MAP[note.color] || COLOR_MAP.yellow;
   const [hover, setHover] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [lightbox, setLightbox] = useState(null); // index into note.images
+
+  const imgs = note.images || [];
 
   return (
-    <div
-      className="note-card"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      onClick={() => onEdit(note)}
-      style={{
-        borderLeftColor: note.pinned
-          ? c.accent
-          : hover
-            ? c.accent
-            : "var(--border)",
-        borderColor: hover ? `${c.accent}55` : "var(--border)",
-        borderLeftColor: note.pinned
-          ? c.accent
-          : hover
-            ? `${c.accent}88`
-            : c.border,
-        opacity: leaving ? 0 : 1,
-        transform: leaving
-          ? "scale(0.96) translateX(4px)"
-          : hover
-            ? "translateY(-2px)"
-            : "none",
-        animation: `notes-dropIn 0.18s ease ${Math.min(index * 0.04, 0.28)}s both`,
-      }}
-    >
-      {/* Tag + actions */}
+    <>
       <div
+        className="note-card"
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        onClick={() => onEdit(note)}
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 10,
+          borderLeftColor: note.pinned
+            ? c.accent
+            : hover
+              ? `${c.accent}88`
+              : c.border,
+          borderColor: hover ? `${c.accent}55` : "var(--border)",
+          opacity: leaving ? 0 : 1,
+          transform: leaving
+            ? "scale(0.96) translateX(4px)"
+            : hover
+              ? "translateY(-2px)"
+              : "none",
+          animation: `notes-dropIn 0.18s ease ${Math.min(index * 0.04, 0.28)}s both`,
         }}
       >
-        <TagBadge tag={c.tag} color={c.tagBg} />
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {note.pinned && (
-            <span
+        {/* Tag + actions */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 10,
+          }}
+        >
+          <TagBadge tag={c.tag} color={c.tagBg} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {note.pinned && (
+              <span
+                style={{
+                  color: c.accent,
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                ◆ PINNED
+              </span>
+            )}
+            <div
               style={{
-                color: c.accent,
-                fontSize: "9px",
-                fontWeight: 700,
-                fontFamily: "'JetBrains Mono', monospace",
-                letterSpacing: "0.08em",
+                display: "flex",
+                gap: 2,
+                opacity: hover ? 1 : 0,
+                transition: "opacity 0.12s",
               }}
             >
-              ◆ PINNED
-            </span>
-          )}
+              <button
+                className="icon-btn pin"
+                title={note.pinned ? "Unpin" : "Pin"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPin(note);
+                }}
+                style={{ color: note.pinned ? c.accent : undefined }}
+              >
+                {note.pinned ? "◇" : "◆"}
+              </button>
+              <button
+                className="icon-btn edit"
+                title="Edit"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(note);
+                }}
+              >
+                ✎
+              </button>
+              <button
+                className="icon-btn danger"
+                title="Delete"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLeaving(true);
+                  setTimeout(() => onDelete(note._id), 200);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Title */}
+        {note.title && (
           <div
             style={{
-              display: "flex",
-              gap: 2,
-              opacity: hover ? 1 : 0,
-              transition: "opacity 0.12s",
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              fontSize: "17px",
+              color: "var(--text-primary)",
+              marginBottom: 6,
+              lineHeight: 1.2,
+              letterSpacing: "0.02em",
+              textTransform: "uppercase",
             }}
           >
-            <button
-              className={`icon-btn pin`}
-              title={note.pinned ? "Unpin" : "Pin"}
-              onClick={(e) => {
-                e.stopPropagation();
-                onPin(note);
+            {note.title}
+          </div>
+        )}
+
+        {/* Body */}
+        <div
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "12px",
+            color: "var(--text-secondary)",
+            lineHeight: 1.7,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            maxHeight: "130px",
+            overflow: "hidden",
+          }}
+        >
+          {note.content}
+        </div>
+
+        {/* Image thumbnails */}
+        {imgs.length > 0 && (
+          <div
+            style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {imgs.map((img, i) => (
+              <img
+                key={img._id || i}
+                src={img.url}
+                alt=""
+                className="note-img-thumb"
+                style={{ borderColor: c.accent + "66" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightbox(i);
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: 12,
+            paddingTop: 10,
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: "10px",
+              color: "var(--text-secondary)",
+              opacity: 0.6,
+              letterSpacing: "0.05em",
+            }}
+          >
+            {timeAgo(note.updatedAt)}
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {imgs.length > 0 && (
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "10px",
+                  color: c.accent,
+                  opacity: 0.6,
+                }}
+              >
+                ◻ {imgs.length}
+              </span>
+            )}
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "10px",
+                color: c.accent,
+                opacity: 0.55,
               }}
-              style={{ color: note.pinned ? c.accent : undefined }}
             >
-              {note.pinned ? "◇" : "◆"}
-            </button>
-            <button
-              className="icon-btn edit"
-              title="Edit"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(note);
-              }}
-            >
-              ✎
-            </button>
-            <button
-              className="icon-btn danger"
-              title="Delete"
-              onClick={(e) => {
-                e.stopPropagation();
-                setLeaving(true);
-                setTimeout(() => onDelete(note._id), 200);
-              }}
-            >
-              ✕
-            </button>
+              #{note._id?.slice(-4).toUpperCase()}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Title */}
-      {note.title && (
+      {lightbox !== null && (
+        <Lightbox
+          images={imgs}
+          startIndex={lightbox}
+          onClose={() => setLightbox(null)}
+        />
+      )}
+    </>
+  );
+}
+
+// ── Image upload zone ─────────────────────────────────────────
+function ImageUploadZone({
+  newFiles,
+  setNewFiles,
+  existingImages,
+  setExistingImages,
+  accent,
+}) {
+  const fileRef = useRef();
+  const [drag, setDrag] = useState(false);
+
+  const addFiles = (files) => {
+    const valid = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    setNewFiles((prev) => [...prev, ...valid].slice(0, 6));
+  };
+
+  return (
+    <div>
+      <label
+        style={{
+          fontFamily: "'Barlow Condensed', sans-serif",
+          fontSize: "10px",
+          color: "var(--text-secondary)",
+          letterSpacing: "0.14em",
+          display: "block",
+          marginBottom: 8,
+          textTransform: "uppercase",
+        }}
+      >
+        IMAGES ({existingImages.length + newFiles.length}/6)
+      </label>
+
+      {/* Existing + new previews */}
+      {(existingImages.length > 0 || newFiles.length > 0) && (
         <div
           style={{
-            fontFamily: "'Barlow Condensed', sans-serif",
-            fontWeight: 700,
-            fontSize: "17px",
-            color: "var(--text-primary)",
-            marginBottom: 6,
-            lineHeight: 1.2,
-            letterSpacing: "0.02em",
-            textTransform: "uppercase",
+            display: "flex",
+            gap: 8,
+            flexWrap: "wrap",
+            marginBottom: 10,
           }}
         >
-          {note.title}
+          {existingImages.map((img, i) => (
+            <div key={img._id || i} style={{ position: "relative" }}>
+              <img src={img.url} alt="" className="modal-img-preview" />
+              <button
+                onClick={() =>
+                  setExistingImages((prev) => prev.filter((_, j) => j !== i))
+                }
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  width: 18,
+                  height: 18,
+                  borderRadius: "50%",
+                  background: "#ef4444",
+                  border: "none",
+                  color: "#fff",
+                  fontSize: 9,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 700,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          {newFiles.map((file, i) => (
+            <div key={i} style={{ position: "relative" }}>
+              <img
+                src={URL.createObjectURL(file)}
+                alt=""
+                className="modal-img-preview"
+                style={{ opacity: 0.7 }}
+              />
+              <button
+                onClick={() =>
+                  setNewFiles((prev) => prev.filter((_, j) => j !== i))
+                }
+                style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  width: 18,
+                  height: 18,
+                  borderRadius: "50%",
+                  background: "#ef4444",
+                  border: "none",
+                  color: "#fff",
+                  fontSize: 9,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 700,
+                }}
+              >
+                ✕
+              </button>
+              <span
+                style={{
+                  position: "absolute",
+                  bottom: -1,
+                  left: 0,
+                  right: 0,
+                  background: "rgba(0,0,0,0.5)",
+                  fontSize: 8,
+                  color: "#fff",
+                  textAlign: "center",
+                  fontFamily: "'JetBrains Mono', monospace",
+                  borderRadius: "0 0 5px 5px",
+                  padding: "1px 0",
+                }}
+              >
+                NEW
+              </span>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Body */}
-      <div
-        style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "12px",
-          color: "var(--text-secondary)",
-          lineHeight: 1.7,
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          maxHeight: "130px",
-          overflow: "hidden",
-        }}
-      >
-        {note.content}
-      </div>
-
-      {/* Footer */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginTop: 12,
-          paddingTop: 10,
-          borderTop: "1px solid var(--border)",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "10px",
-            color: "var(--text-secondary)",
-            opacity: 0.6,
-            letterSpacing: "0.05em",
+      {/* Drop zone */}
+      {existingImages.length + newFiles.length < 6 && (
+        <div
+          className={`img-dropzone ${drag ? "drag" : ""}`}
+          style={{ borderColor: drag ? accent : undefined }}
+          onClick={() => fileRef.current.click()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDrag(true);
+          }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDrag(false);
+            addFiles(e.dataTransfer.files);
           }}
         >
-          {timeAgo(note.updatedAt)}
-        </span>
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "10px",
-            color: c.accent,
-            opacity: 0.55,
-          }}
-        >
-          #{note._id?.slice(-4).toUpperCase()}
-        </span>
-      </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => addFiles(e.target.files)}
+          />
+          <div style={{ fontSize: 20, marginBottom: 4, opacity: 0.5 }}>◻</div>
+          <div>click or drag images here</div>
+          <div style={{ opacity: 0.4, fontSize: 10, marginTop: 3 }}>
+            jpg · png · gif · webp · max 8mb each
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -374,6 +657,8 @@ function NoteModal({ note, onClose, onSave }) {
   const [color, setColor] = useState(note?.color || "yellow");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [existingImages, setExistingImages] = useState(note?.images || []);
+  const [newFiles, setNewFiles] = useState([]);
   const contentRef = useRef();
 
   useEffect(() => {
@@ -388,7 +673,18 @@ function NoteModal({ note, onClose, onSave }) {
     setSaving(true);
     setError("");
     try {
-      await onSave({ title: title.trim(), content: content.trim(), color });
+      const fd = new FormData();
+      fd.append("title", title.trim());
+      fd.append("content", content.trim());
+      fd.append("color", color);
+      // Tell backend which existing images to keep
+      fd.append(
+        "keepImages",
+        JSON.stringify(existingImages.map((img) => img.publicId)),
+      );
+      newFiles.forEach((f) => fd.append("images", f));
+
+      await onSave(fd);
       onClose();
     } catch (e) {
       setError(`// error: ${e.message}`);
@@ -421,7 +717,9 @@ function NoteModal({ note, onClose, onSave }) {
           borderTop: `3px solid ${c.accent}`,
           borderRadius: "10px",
           padding: "28px",
-          width: "min(560px, 94vw)",
+          width: "min(600px, 94vw)",
+          maxHeight: "90vh",
+          overflowY: "auto",
           boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
           animation: "notes-slideUp 0.2s ease",
         }}
@@ -532,7 +830,7 @@ function NoteModal({ note, onClose, onSave }) {
               setError("");
             }}
             placeholder="// write your note here..."
-            rows={9}
+            rows={7}
             className="notes-input"
             style={{
               resize: "vertical",
@@ -562,6 +860,17 @@ function NoteModal({ note, onClose, onSave }) {
               {error}
             </div>
           )}
+        </div>
+
+        {/* Image upload */}
+        <div style={{ marginBottom: 20 }}>
+          <ImageUploadZone
+            newFiles={newFiles}
+            setNewFiles={setNewFiles}
+            existingImages={existingImages}
+            setExistingImages={setExistingImages}
+            accent={c.accent}
+          />
         </div>
 
         {/* Label picker */}
@@ -725,11 +1034,11 @@ export default function NotesPage() {
     })();
   }, []);
 
-  const handleSave = async (payload) => {
+  const handleSave = async (formData) => {
     const isEdit = modal && modal._id;
     const res = isEdit
-      ? await noteAPI.update(modal._id, payload)
-      : await noteAPI.create(payload);
+      ? await noteAPI.update(modal._id, formData)
+      : await noteAPI.create(formData);
     const saved = res.data;
     if (isEdit) {
       setNotes((n) => n.map((x) => (x._id === saved._id ? saved : x)));
@@ -782,7 +1091,7 @@ export default function NotesPage() {
     >
       {injectStyles()}
 
-      {/* ── Page header ── */}
+      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -796,7 +1105,6 @@ export default function NotesPage() {
         }}
       >
         <div>
-          {/* Breadcrumb */}
           <div
             style={{
               fontFamily: "'JetBrains Mono', monospace",
@@ -814,8 +1122,6 @@ export default function NotesPage() {
             </span>
             MONEYTRACK / NOTES
           </div>
-
-          {/* Title */}
           <h1
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",
@@ -830,8 +1136,6 @@ export default function NotesPage() {
           >
             MY <span style={{ color: "#f59e0b" }}>NOTES</span>
           </h1>
-
-          {/* Stats */}
           <div
             style={{
               display: "flex",
@@ -865,8 +1169,6 @@ export default function NotesPage() {
             </span>
           </div>
         </div>
-
-        {/* New note button */}
         <button
           className="tact-btn"
           onClick={() => setModal("new")}
@@ -883,7 +1185,7 @@ export default function NotesPage() {
         </button>
       </div>
 
-      {/* ── Search + filters ── */}
+      {/* Search + filters */}
       <div
         style={{
           display: "flex",
@@ -893,7 +1195,6 @@ export default function NotesPage() {
           alignItems: "center",
         }}
       >
-        {/* Search */}
         <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
           <span
             style={{
@@ -918,8 +1219,6 @@ export default function NotesPage() {
             onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
           />
         </div>
-
-        {/* Filter chips */}
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
           <button
             className={`filter-chip ${filterColor === "all" ? "active" : ""}`}
@@ -966,7 +1265,7 @@ export default function NotesPage() {
         </div>
       </div>
 
-      {/* ── Loading ── */}
+      {/* Loading */}
       {loading && (
         <div
           style={{
@@ -992,7 +1291,7 @@ export default function NotesPage() {
         </div>
       )}
 
-      {/* ── Empty ── */}
+      {/* Empty */}
       {!loading && filtered.length === 0 && (
         <div style={{ paddingTop: 50 }}>
           <div
@@ -1023,7 +1322,7 @@ export default function NotesPage() {
         </div>
       )}
 
-      {/* ── Pinned ── */}
+      {/* Pinned */}
       {!loading && pinned.length > 0 && (
         <div style={{ marginBottom: 24 }}>
           <SectionLabel label="◆ PINNED" count={pinned.length} />
@@ -1042,7 +1341,7 @@ export default function NotesPage() {
         </div>
       )}
 
-      {/* ── Others ── */}
+      {/* Others */}
       {!loading && unpinned.length > 0 && (
         <div>
           <SectionLabel
@@ -1064,7 +1363,7 @@ export default function NotesPage() {
         </div>
       )}
 
-      {/* ── Modal ── */}
+      {/* Modal */}
       {modal && (
         <NoteModal
           note={modal === "new" ? null : modal}
@@ -1073,7 +1372,7 @@ export default function NotesPage() {
         />
       )}
 
-      {/* ── Toast ── */}
+      {/* Toast */}
       {toast && (
         <div
           style={{
