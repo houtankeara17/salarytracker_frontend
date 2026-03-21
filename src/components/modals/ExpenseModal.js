@@ -1,5 +1,5 @@
 // src/components/modals/ExpenseModal.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useApp } from "../../context/AppContext";
 import { expenseAPI } from "../../utils/api";
 import KhmerDateInput from "../KhmerDateInput";
@@ -37,14 +37,15 @@ const defaultForm = {
   paymentMethod: "cash",
   noted: "",
   imageQr: "",
+  imageUrl: "",
 };
 
-const styles = {
+const S = {
   overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(10,10,16,0.85)",
-    backdropFilter: "blur(6px)",
+    background: "rgba(10,10,16,0.88)",
+    backdropFilter: "blur(8px)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -52,16 +53,16 @@ const styles = {
     zIndex: 1000,
   },
   modal: {
-    background: "#16161e",
+    background: "#13131a",
     border: "1px solid rgba(99,102,241,0.18)",
-    borderRadius: "20px",
+    borderRadius: "22px",
     width: "100%",
-    maxWidth: "480px",
-    maxHeight: "90vh",
+    maxWidth: "500px",
+    maxHeight: "92vh",
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
-    boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
+    boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)",
     animation: "emSlideUp 0.28s cubic-bezier(.16,1,.3,1)",
   },
   header: {
@@ -72,7 +73,6 @@ const styles = {
     justifyContent: "space-between",
     flexShrink: 0,
   },
-  headerLeft: { display: "flex", alignItems: "center", gap: "10px" },
   iconWrap: {
     width: "36px",
     height: "36px",
@@ -199,25 +199,175 @@ const styles = {
     boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
     letterSpacing: "0.1px",
   },
+  // Image upload zone
+  uploadZone: {
+    border: "1.5px dashed rgba(99,102,241,0.3)",
+    borderRadius: "12px",
+    padding: "16px",
+    background: "rgba(99,102,241,0.03)",
+    cursor: "pointer",
+    transition: "all 0.2s",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "6px",
+    textAlign: "center",
+    position: "relative",
+  },
+  uploadZoneHover: {
+    borderColor: "rgba(99,102,241,0.6)",
+    background: "rgba(99,102,241,0.07)",
+  },
+  imagePreviewWrap: {
+    position: "relative",
+    borderRadius: "12px",
+    overflow: "hidden",
+    border: "1px solid rgba(99,102,241,0.2)",
+    background: "#0d0d14",
+  },
+  imagePreview: {
+    width: "100%",
+    maxHeight: "180px",
+    objectFit: "contain",
+    display: "block",
+    borderRadius: "11px",
+  },
+  removeImgBtn: {
+    position: "absolute",
+    top: "8px",
+    right: "8px",
+    width: "26px",
+    height: "26px",
+    borderRadius: "6px",
+    background: "rgba(239,68,68,0.85)",
+    border: "none",
+    color: "#fff",
+    fontSize: "12px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: 700,
+    backdropFilter: "blur(4px)",
+    transition: "all 0.15s",
+  },
 };
 
-// Tries every known API response shape to extract the saved item
 const extractItem = (res) => {
   if (!res) return null;
   const d = res?.data;
-  if (d && typeof d === "object" && d._id) return d; // res.data is the item
-  if (d?.data?._id) return d.data; // res.data.data
-  if (d?.expense?._id) return d.expense; // res.data.expense
-  if (res?._id) return res; // res itself
+  if (d && typeof d === "object" && d._id) return d;
+  if (d?.data?._id) return d.data;
+  if (d?.expense?._id) return d.expense;
+  if (res?._id) return res;
   return null;
 };
+
+/* ── Image Upload Zone Component ── */
+function ImageUploadZone({
+  label,
+  value,
+  preview,
+  onUpload,
+  onRemove,
+  accept = "image/*",
+  hint = "",
+}) {
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef();
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  };
+
+  const processFile = (file) => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => onUpload(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div>
+      <div style={S.label}>{label}</div>
+      {preview ? (
+        <div style={S.imagePreviewWrap}>
+          <img src={preview} alt="preview" style={S.imagePreview} />
+          <button
+            type="button"
+            style={S.removeImgBtn}
+            onClick={onRemove}
+            title="Remove image"
+          >
+            ✕
+          </button>
+          {/* small re-upload chip */}
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            style={{
+              position: "absolute",
+              bottom: "8px",
+              right: "8px",
+              padding: "4px 10px",
+              borderRadius: "6px",
+              border: "none",
+              background: "rgba(99,102,241,0.85)",
+              color: "#fff",
+              fontSize: "11px",
+              fontWeight: 600,
+              cursor: "pointer",
+              backdropFilter: "blur(4px)",
+            }}
+          >
+            Change
+          </button>
+        </div>
+      ) : (
+        <div
+          style={{ ...S.uploadZone, ...(dragOver ? S.uploadZoneHover : {}) }}
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+        >
+          <span style={{ fontSize: "28px", lineHeight: 1 }}>🖼️</span>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "#818cf8" }}>
+            Click or drag & drop
+          </span>
+          {hint && (
+            <span style={{ fontSize: "11px", color: "#555" }}>{hint}</span>
+          )}
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        style={{ display: "none" }}
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) processFile(file);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
 
 export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
   const { t, language } = useApp();
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
   const [qrPreview, setQrPreview] = useState(null);
-  const [banner, setBanner] = useState(null); // ← add
+  const [imgPreview, setImgPreview] = useState(null);
+  const [banner, setBanner] = useState(null);
 
   useEffect(() => {
     if (editData) {
@@ -234,27 +384,19 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
         paymentMethod: editData.paymentMethod || "cash",
         noted: editData.noted || "",
         imageQr: editData.imageQr || "",
+        imageUrl: editData.imageUrl || "",
       });
-      if (editData.imageQr) setQrPreview(editData.imageQr);
+      setQrPreview(editData.imageQr || null);
+      setImgPreview(editData.imageUrl || null);
     } else {
       setForm(defaultForm);
       setQrPreview(null);
+      setImgPreview(null);
     }
   }, [editData, isOpen]);
 
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-
-  const handleQrUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setForm((prev) => ({ ...prev, imageQr: reader.result }));
-      setQrPreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const validateForm = () => {
     if (!form.itemName.trim()) return "Item name is required";
@@ -276,7 +418,6 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
     return null;
   };
 
-  // ── FIXED: capture res and pass saved item to onSuccess ─────────────────
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
@@ -288,10 +429,10 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
       if (editData) {
         const res = await expenseAPI.update(editData._id, form);
         const saved = extractItem(res) || { ...editData, ...form };
-        onSuccess(saved); // ← parent handles the banner
+        onSuccess(saved);
       } else {
         const res = await expenseAPI.create(form);
-        onSuccess(extractItem(res)); // ← parent handles the banner
+        onSuccess(extractItem(res));
       }
       onClose();
     } catch (err) {
@@ -333,26 +474,27 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
         .em-body::-webkit-scrollbar { width: 4px; }
         .em-body::-webkit-scrollbar-track { background: transparent; }
         .em-body::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 4px; }
+        .em-upload-zone:hover { border-color: rgba(99,102,241,0.55) !important; background: rgba(99,102,241,0.07) !important; }
       `}</style>
 
-      <div style={styles.overlay} onClick={onClose}>
-        <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div style={S.overlay} onClick={onClose}>
+        <div style={S.modal} onClick={(e) => e.stopPropagation()}>
           {/* Header */}
-          <div style={styles.header}>
-            <div style={styles.headerLeft}>
-              <div style={styles.iconWrap}>💸</div>
+          <div style={S.header}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={S.iconWrap}>💸</div>
               <div>
-                <div style={styles.title}>
+                <div style={S.title}>
                   {editData ? t("edit") : t("addNew")} {t("expenses")}
                 </div>
-                <div style={styles.subtitle}>
+                <div style={S.subtitle}>
                   {editData ? "Update your record" : "Track your spending"}
                 </div>
               </div>
             </div>
             <button
               className="em-close-btn"
-              style={styles.closeBtn}
+              style={S.closeBtn}
               onClick={onClose}
             >
               ✕
@@ -360,24 +502,24 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
           </div>
 
           {/* Body */}
-          <div className="em-body" style={styles.body}>
+          <div className="em-body" style={S.body}>
             {/* Date + Item Name */}
-            <div style={styles.row}>
+            <div style={S.row}>
               <div>
-                <div style={styles.label}>
-                  {t("date")} <span style={styles.req}>*</span>
+                <div style={S.label}>
+                  {t("date")} <span style={S.req}>*</span>
                 </div>
                 <KhmerDateInput
                   name="date"
                   value={form.date}
                   onChange={handleChange}
-                  style={{ ...styles.input }}
+                  style={{ ...S.input }}
                   className="em-input"
                 />
               </div>
               <div>
-                <div style={styles.label}>
-                  {t("itemName")} <span style={styles.req}>*</span>
+                <div style={S.label}>
+                  {t("itemName")} <span style={S.req}>*</span>
                 </div>
                 <input
                   type="text"
@@ -385,7 +527,7 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                   value={form.itemName}
                   onChange={handleChange}
                   className="em-input"
-                  style={styles.input}
+                  style={S.input}
                   placeholder={
                     language === "kh" ? "ឈ្មោះទំនិញ..." : "What did you buy?"
                   }
@@ -395,10 +537,10 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
 
             {/* Category */}
             <div>
-              <div style={styles.label}>
-                {t("category")} <span style={styles.req}>*</span>
+              <div style={S.label}>
+                {t("category")} <span style={S.req}>*</span>
               </div>
-              <div style={styles.catGrid}>
+              <div style={S.catGrid}>
                 {CATEGORIES.map((cat) => {
                   const active = form.category === cat.value;
                   return (
@@ -465,10 +607,10 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
 
             {/* Amount + Currency */}
             <div>
-              <div style={styles.label}>
-                {t("amount")} <span style={styles.req}>*</span>
+              <div style={S.label}>
+                {t("amount")} <span style={S.req}>*</span>
               </div>
-              <div style={styles.row}>
+              <div style={S.row}>
                 <div style={{ position: "relative" }}>
                   <span
                     style={{
@@ -492,7 +634,7 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                     min="0"
                     step="0.01"
                     className="em-input"
-                    style={{ ...styles.input, paddingLeft: "28px" }}
+                    style={{ ...S.input, paddingLeft: "28px" }}
                     placeholder="0.00"
                   />
                 </div>
@@ -531,7 +673,7 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                   ))}
                 </div>
               </div>
-              <div style={styles.amountPreview}>
+              <div style={S.amountPreview}>
                 <span
                   style={{ fontSize: "11px", color: "#666", fontWeight: 500 }}
                 >
@@ -553,8 +695,8 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
             {/* Exchange Rate */}
             {form.currency === "KHR" && (
               <div>
-                <div style={styles.label}>
-                  {t("exchangeRate")} <span style={styles.req}>*</span>
+                <div style={S.label}>
+                  {t("exchangeRate")} <span style={S.req}>*</span>
                 </div>
                 <input
                   type="number"
@@ -562,15 +704,15 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                   value={form.exchangeRate}
                   onChange={handleChange}
                   className="em-input"
-                  style={styles.input}
+                  style={S.input}
                 />
               </div>
             )}
 
             {/* Quantity */}
             <div>
-              <div style={styles.label}>
-                {t("quantity")} <span style={styles.req}>*</span>
+              <div style={S.label}>
+                {t("quantity")} <span style={S.req}>*</span>
               </div>
               <input
                 type="number"
@@ -579,16 +721,16 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                 onChange={handleChange}
                 min="1"
                 className="em-input"
-                style={styles.input}
+                style={S.input}
               />
             </div>
 
             {/* Payment Method */}
             <div>
-              <div style={styles.label}>
-                {t("paymentMethod")} <span style={styles.req}>*</span>
+              <div style={S.label}>
+                {t("paymentMethod")} <span style={S.req}>*</span>
               </div>
-              <div style={styles.payGrid}>
+              <div style={S.payGrid}>
                 {PAYMENT_METHODS.map((m) => {
                   const active = form.paymentMethod === m.value;
                   return (
@@ -632,71 +774,70 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
               </div>
             </div>
 
-            {/* QR Upload */}
+            {/* ── IMAGE UPLOAD (general receipt / product photo) ── */}
+            <ImageUploadZone
+              label="📷 Item Photo / Receipt (optional)"
+              value={form.imageUrl}
+              preview={imgPreview}
+              hint="Upload a receipt or product photo"
+              onUpload={(dataUri) => {
+                setForm((p) => ({ ...p, imageUrl: dataUri }));
+                setImgPreview(dataUri);
+              }}
+              onRemove={() => {
+                setForm((p) => ({ ...p, imageUrl: "" }));
+                setImgPreview(null);
+              }}
+            />
+
+            {/* QR Upload — only when payment = qr */}
             {form.paymentMethod === "qr" && (
-              <div>
-                <div style={styles.label}>
-                  {t("qrImage")} <span style={styles.req}>*</span>
-                </div>
-                <div
-                  style={{ display: "flex", gap: "12px", alignItems: "center" }}
-                >
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleQrUpload}
-                    className="em-input"
-                    style={{
-                      ...styles.input,
-                      padding: "8px 14px",
-                      fontSize: "12px",
-                      flex: 1,
-                    }}
-                  />
-                  {qrPreview && (
-                    <img
-                      src={qrPreview}
-                      alt="QR"
-                      style={{
-                        width: "52px",
-                        height: "52px",
-                        borderRadius: "10px",
-                        objectFit: "cover",
-                        border: "1px solid rgba(99,102,241,0.3)",
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
+              <ImageUploadZone
+                label={
+                  <>
+                    {t("qrImage")} <span style={S.req}>*</span>
+                  </>
+                }
+                value={form.imageQr}
+                preview={qrPreview}
+                hint="Upload your QR payment screenshot"
+                onUpload={(dataUri) => {
+                  setForm((p) => ({ ...p, imageQr: dataUri }));
+                  setQrPreview(dataUri);
+                }}
+                onRemove={() => {
+                  setForm((p) => ({ ...p, imageQr: "" }));
+                  setQrPreview(null);
+                }}
+              />
             )}
 
             {/* Notes */}
             <div>
-              <div style={styles.label}>{t("notes")}</div>
+              <div style={S.label}>{t("notes")}</div>
               <textarea
                 name="noted"
                 value={form.noted}
                 onChange={handleChange}
                 className="em-input"
-                style={{ ...styles.input, resize: "none", minHeight: "70px" }}
+                style={{ ...S.input, resize: "none", minHeight: "70px" }}
                 placeholder="Optional notes..."
               />
             </div>
           </div>
 
           {/* Footer */}
-          <div style={styles.footer}>
+          <div style={S.footer}>
             <button
               className="em-cancel-btn"
-              style={styles.cancelBtn}
+              style={S.cancelBtn}
               onClick={onClose}
             >
               {t("cancel")}
             </button>
             <button
               className="em-submit-btn"
-              style={styles.submitBtn}
+              style={S.submitBtn}
               onClick={handleSubmit}
               disabled={loading}
             >
@@ -709,6 +850,10 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
           </div>
         </div>
       </div>
+
+      {banner && (
+        <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
+      )}
     </>
   );
 }

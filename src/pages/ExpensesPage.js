@@ -136,7 +136,7 @@ const PAY_META = {
 };
 
 /* ─────────────────────────────────────────────
-   TINY ICON COMPONENTS
+   ICONS
 ───────────────────────────────────────────── */
 const IcBox = ({ active }) => (
   <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
@@ -296,18 +296,81 @@ const IcSearch = () => (
 );
 
 /* ─────────────────────────────────────────────
+   LIGHTBOX
+───────────────────────────────────────────── */
+function Lightbox({ src, onClose }) {
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  if (!src) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 2000,
+        background: "rgba(0,0,0,0.92)",
+        backdropFilter: "blur(10px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        animation: "lbFadeIn 0.2s ease",
+      }}
+    >
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          top: "20px",
+          right: "20px",
+          width: "40px",
+          height: "40px",
+          borderRadius: "10px",
+          background: "rgba(255,255,255,0.1)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          color: "#fff",
+          fontSize: "16px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        ✕
+      </button>
+      <img
+        src={src}
+        alt="expense"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: "90vw",
+          maxHeight: "85vh",
+          borderRadius: "16px",
+          boxShadow: "0 40px 100px rgba(0,0,0,0.8)",
+          objectFit: "contain",
+          animation: "lbScaleIn 0.22s cubic-bezier(.16,1,.3,1)",
+        }}
+      />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    INLINE STYLES
 ───────────────────────────────────────────── */
 const S = {
-  /* page wrapper */
   page: {
     display: "flex",
     flexDirection: "column",
     gap: "20px",
     animation: "epFadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both",
   },
-
-  /* header */
   header: {
     display: "flex",
     alignItems: "flex-start",
@@ -324,7 +387,6 @@ const S = {
     lineHeight: 1.1,
   },
   hsub: { fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px" },
-
   addBtn: {
     display: "inline-flex",
     alignItems: "center",
@@ -341,8 +403,6 @@ const S = {
     boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
     transition: "transform 0.15s,box-shadow 0.15s",
   },
-
-  /* stat bar */
   statBar: {
     display: "grid",
     gridTemplateColumns: "repeat(4,1fr)",
@@ -376,8 +436,6 @@ const S = {
     color: "var(--text-secondary)",
     marginTop: "4px",
   },
-
-  /* filter panel */
   filterPanel: {
     background: "var(--card-bg)",
     border: "1px solid var(--border)",
@@ -423,16 +481,12 @@ const S = {
     transition: "border-color 0.2s",
     cursor: "pointer",
   },
-
-  /* main card */
   mainCard: {
     background: "var(--card-bg)",
     border: "1px solid var(--border)",
     borderRadius: "18px",
     overflow: "hidden",
   },
-
-  /* toolbar */
   toolbar: {
     display: "flex",
     alignItems: "center",
@@ -448,7 +502,6 @@ const S = {
     color: "var(--text-secondary)",
     fontFamily: "'DM Sans',sans-serif",
   },
-
   viewToggle: {
     display: "flex",
     gap: "2px",
@@ -475,11 +528,7 @@ const S = {
     boxShadow: active ? "0 2px 8px rgba(99,102,241,0.3)" : "none",
     transition: "all 0.15s",
   }),
-
-  /* empty */
   empty: { padding: "56px 16px", textAlign: "center" },
-
-  /* pagination */
   pgBar: {
     display: "flex",
     alignItems: "center",
@@ -513,8 +562,6 @@ const S = {
     boxShadow: active ? "0 2px 8px rgba(99,102,241,0.3)" : "none",
     fontFamily: "'DM Sans',sans-serif",
   }),
-
-  /* size picker */
   sizeRow: { display: "flex", alignItems: "center", gap: "5px" },
   sizeLabel: { fontSize: "11px", color: "var(--text-secondary)" },
   sizeBtn: (active) => ({
@@ -530,7 +577,7 @@ const S = {
     fontFamily: "'DM Sans',sans-serif",
   }),
 
-  /* ── BOX VIEW ── */
+  /* BOX VIEW */
   boxGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill,minmax(230px,1fr))",
@@ -608,7 +655,7 @@ const S = {
   },
   boxDate: { fontSize: "11px", color: "var(--text-secondary)" },
 
-  /* ── TABLE VIEW ── */
+  /* TABLE VIEW */
   tableWrap: { overflowX: "auto" },
   table: { width: "100%", borderCollapse: "collapse" },
   th: {
@@ -642,7 +689,7 @@ const S = {
   },
   tdAmountSub: { fontSize: "11px", color: "var(--text-secondary)" },
 
-  /* ── ROW VIEW ── */
+  /* ROW VIEW */
   rowItem: {
     display: "flex",
     alignItems: "center",
@@ -701,7 +748,7 @@ const S = {
 };
 
 /* ─────────────────────────────────────────────
-   SMALL SHARED COMPONENTS
+   SHARED SMALL COMPONENTS
 ───────────────────────────────────────────── */
 function CatBadge({ cat }) {
   const m = CAT_META[cat] || CAT_META.other;
@@ -784,9 +831,41 @@ function ActionBtns({ e, onEdit, onDelete }) {
   );
 }
 
-/* ─────────────────────────────────────────────
-   STAT CARD
-───────────────────────────────────────────── */
+/* Tiny clickable image thumbnail */
+function ImgThumb({ src, onOpen, size = 40 }) {
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt=""
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpen(src);
+      }}
+      title="View image"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "8px",
+        objectFit: "cover",
+        border: "1px solid rgba(99,102,241,0.25)",
+        cursor: "zoom-in",
+        flexShrink: 0,
+        transition: "transform 0.15s, box-shadow 0.15s",
+      }}
+      onMouseEnter={(ev) => {
+        ev.currentTarget.style.transform = "scale(1.06)";
+        ev.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.3)";
+      }}
+      onMouseLeave={(ev) => {
+        ev.currentTarget.style.transform = "scale(1)";
+        ev.currentTarget.style.boxShadow = "none";
+      }}
+    />
+  );
+}
+
+/* StatCard */
 function StatCard({ label, value, sub, accent }) {
   return (
     <div style={{ ...S.statCard, borderTop: `3px solid ${accent}` }}>
@@ -817,6 +896,7 @@ export default function ExpensesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [banner, setBanner] = useState(null);
+  const [lightbox, setLightbox] = useState(null); // ← image lightbox
 
   const editDataRef = useRef(editData);
   useEffect(() => {
@@ -849,7 +929,7 @@ export default function ExpensesPage() {
     setCurrentPage(1);
   }, [filterCat, filterMonth, filterYear, search, pageSize]);
 
-  /* ── CRUD helpers ── */
+  /* ── CRUD ── */
   const handleModalSuccess = (savedItem) => {
     if (!savedItem) {
       loadExpenses();
@@ -934,18 +1014,22 @@ export default function ExpensesPage() {
     return pages;
   };
 
-  /* ── VIEW: BOX ── */
+  /* ── BOX VIEW ── */
   const BoxView = () => (
     <div style={S.boxGrid}>
       {paginated.map((e) => {
         const cm = CAT_META[e.category] || CAT_META.other;
+        const displayImg = e.imageUrl || null; // main photo
+        const qrImg = e.imageQr || null; // QR receipt
+        const hasImg = !!(displayImg || qrImg);
+
         return (
           <div
             key={e._id}
             style={S.boxCard}
             onMouseEnter={(ev) => {
               ev.currentTarget.style.transform = "translateY(-3px)";
-              ev.currentTarget.style.boxShadow = "0 8px 28px rgba(0,0,0,0.12)";
+              ev.currentTarget.style.boxShadow = `0 10px 32px rgba(0,0,0,0.18), 0 0 0 1px ${cm.border}`;
               ev.currentTarget.style.borderColor = cm.border;
             }}
             onMouseLeave={(ev) => {
@@ -954,41 +1038,353 @@ export default function ExpensesPage() {
               ev.currentTarget.style.borderColor = "var(--border)";
             }}
           >
-            <div style={S.boxAccent(cm.color)} />
-            <div style={S.boxBody}>
-              <div style={S.boxTop}>
-                <div style={S.boxEmojiWrap(cm.bg, cm.border)}>{cm.emoji}</div>
-                <ActionBtns e={e} onEdit={openEdit} onDelete={setDeleteId} />
+            {/* ── CARD HEADER: image OR decorative banner ── */}
+            {hasImg ? (
+              /* ── HAS IMAGE: photo banner ── */
+              <div
+                style={{
+                  position: "relative",
+                  height: "118px",
+                  overflow: "hidden",
+                  background: "#0d0d14",
+                }}
+              >
+                <img
+                  src={displayImg || qrImg}
+                  alt={e.itemName}
+                  onClick={() => setLightbox(displayImg || qrImg)}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                    cursor: "zoom-in",
+                    transition: "transform 0.32s ease",
+                  }}
+                  onMouseEnter={(ev) =>
+                    (ev.currentTarget.style.transform = "scale(1.05)")
+                  }
+                  onMouseLeave={(ev) =>
+                    (ev.currentTarget.style.transform = "scale(1)")
+                  }
+                />
+                {/* dark gradient fade into card body */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background:
+                      "linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.55) 100%)",
+                    pointerEvents: "none",
+                  }}
+                />
+                {/* view chip */}
+                <span
+                  style={{
+                    position: "absolute",
+                    bottom: "7px",
+                    right: "8px",
+                    padding: "2px 8px",
+                    borderRadius: "5px",
+                    background: "rgba(0,0,0,0.6)",
+                    backdropFilter: "blur(6px)",
+                    fontSize: "10px",
+                    color: "rgba(255,255,255,0.8)",
+                    fontWeight: 600,
+                    cursor: "zoom-in",
+                    pointerEvents: "none",
+                  }}
+                >
+                  🔍 View
+                </span>
+                {/* if both imageUrl AND imageQr exist, show QR thumb in corner */}
+                {displayImg && qrImg && (
+                  <img
+                    src={qrImg}
+                    alt="QR"
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      setLightbox(qrImg);
+                    }}
+                    title="View QR receipt"
+                    style={{
+                      position: "absolute",
+                      top: "8px",
+                      left: "8px",
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "7px",
+                      objectFit: "cover",
+                      border: "1.5px solid rgba(255,255,255,0.25)",
+                      cursor: "zoom-in",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                    }}
+                  />
+                )}
               </div>
-              <div style={S.boxName} title={e.itemName}>
-                {e.itemName}
+            ) : (
+              /* ── NO IMAGE: rich decorative header ── */
+              <div
+                style={{
+                  position: "relative",
+                  height: "88px",
+                  overflow: "hidden",
+                  background: `linear-gradient(135deg, ${cm.color}22 0%, ${cm.color}0d 60%, transparent 100%)`,
+                  borderBottom: `1px solid ${cm.border}`,
+                }}
+              >
+                {/* SVG pattern — subtle dot grid */}
+                <svg
+                  width="100%"
+                  height="100%"
+                  style={{ position: "absolute", inset: 0, opacity: 0.18 }}
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <defs>
+                    <pattern
+                      id={`dot-${e._id}`}
+                      x="0"
+                      y="0"
+                      width="16"
+                      height="16"
+                      patternUnits="userSpaceOnUse"
+                    >
+                      <circle cx="2" cy="2" r="1.2" fill={cm.color} />
+                    </pattern>
+                  </defs>
+                  <rect
+                    width="100%"
+                    height="100%"
+                    fill={`url(#dot-${e._id})`}
+                  />
+                </svg>
+
+                {/* large faded emoji as watermark */}
+                <span
+                  style={{
+                    position: "absolute",
+                    right: "-8px",
+                    bottom: "-10px",
+                    fontSize: "72px",
+                    lineHeight: 1,
+                    opacity: 0.13,
+                    userSelect: "none",
+                    pointerEvents: "none",
+                    filter: "saturate(0.6)",
+                  }}
+                >
+                  {cm.emoji}
+                </span>
+
+                {/* top-left: category pill */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "10px",
+                    left: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      padding: "4px 10px",
+                      borderRadius: "99px",
+                      background: `${cm.color}22`,
+                      border: `1px solid ${cm.color}44`,
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      color: cm.color,
+                    }}
+                  >
+                    {cm.emoji}{" "}
+                    <span style={{ textTransform: "capitalize" }}>
+                      {e.category}
+                    </span>
+                  </span>
+                </div>
+
+                {/* bottom-left: payment method */}
+                <div
+                  style={{ position: "absolute", bottom: "10px", left: "12px" }}
+                >
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "3px 8px",
+                      borderRadius: "6px",
+                      background: "rgba(0,0,0,0.28)",
+                      backdropFilter: "blur(6px)",
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      color: "rgba(255,255,255,0.7)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    {PAY_META[e.paymentMethod]?.icon}{" "}
+                    {PAY_META[e.paymentMethod]?.label}
+                  </span>
+                </div>
+
+                {/* top-right: action buttons */}
+                <div style={{ position: "absolute", top: "6px", right: "6px" }}>
+                  <ActionBtns e={e} onEdit={openEdit} onDelete={setDeleteId} />
+                </div>
               </div>
-              {e.noted && <div style={S.boxNote}>{e.noted}</div>}
-              <div style={S.boxDivider} />
+            )}
+
+            {/* colored accent line */}
+            <div
+              style={{
+                height: "2px",
+                background: `linear-gradient(90deg,${cm.color},${cm.color}44,transparent)`,
+              }}
+            />
+
+            {/* ── CARD BODY ── */}
+            <div style={{ padding: "12px 14px 14px" }}>
+              {/* top row: emoji icon + actions (only shown when has image — no-image cards have actions in header) */}
               <div
                 style={{
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  marginBottom: "9px",
+                }}
+              >
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <div
+                    style={{
+                      ...S.boxEmojiWrap(cm.bg, cm.border),
+                      width: "32px",
+                      height: "32px",
+                      fontSize: "16px",
+                    }}
+                  >
+                    {cm.emoji}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{ ...S.boxName, marginBottom: 0 }}
+                      title={e.itemName}
+                    >
+                      {e.itemName}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: "var(--text-secondary)",
+                        marginTop: "1px",
+                      }}
+                    >
+                      qty {e.quantity ?? 1} ·{" "}
+                      {formatDate(e.date, language, "short")}
+                    </div>
+                  </div>
+                </div>
+                {/* action buttons only for image cards (no-image has them in the header) */}
+                {hasImg && (
+                  <ActionBtns e={e} onEdit={openEdit} onDelete={setDeleteId} />
+                )}
+              </div>
+
+              {/* notes */}
+              {e.noted && (
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--text-secondary)",
+                    lineHeight: 1.4,
+                    marginBottom: "10px",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {e.noted}
+                </div>
+              )}
+
+              <div
+                style={{
+                  borderTop: `1px solid var(--border)`,
+                  margin: "10px 0 8px",
+                }}
+              />
+
+              {/* amount row */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-end",
                   justifyContent: "space-between",
                 }}
               >
                 <div>
-                  <div style={S.boxAmountVal}>
+                  <div
+                    style={{
+                      fontFamily: "'DM Mono',monospace",
+                      fontSize: "17px",
+                      fontWeight: 700,
+                      color: cm.color,
+                      letterSpacing: "-0.5px",
+                    }}
+                  >
                     {formatAmount(e.amountUSD, e.amountKHR)}
                   </div>
-                  <div style={S.boxAmountSub}>
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      color: "var(--text-secondary)",
+                      marginTop: "1px",
+                    }}
+                  >
                     {e.currency === "KHR"
                       ? `${e.amount?.toLocaleString()} ៛`
                       : `$${e.amount}`}
                   </div>
                 </div>
-                <CatBadge cat={e.category} />
-              </div>
-              <div style={S.boxFooter}>
-                <PayBadge method={e.paymentMethod} />
-                <span style={S.boxDate}>
-                  {formatDate(e.date, language, "medium")}
-                </span>
+
+                {/* for image cards: show pay+date; for no-image cards: just date (pay is already in header) */}
+                {hasImg ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      gap: "4px",
+                    }}
+                  >
+                    <PayBadge method={e.paymentMethod} />
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      {formatDate(e.date, language, "medium")}
+                    </span>
+                  </div>
+                ) : (
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      color: "var(--text-secondary)",
+                      textAlign: "right",
+                    }}
+                  >
+                    {formatDate(e.date, language, "medium")}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -997,7 +1393,7 @@ export default function ExpensesPage() {
     </div>
   );
 
-  /* ── VIEW: TABLE ── */
+  /* ── TABLE VIEW ── */
   const TableView = () => (
     <div style={S.tableWrap}>
       <table style={S.table}>
@@ -1006,6 +1402,7 @@ export default function ExpensesPage() {
             {[
               "",
               t("itemName"),
+              "Photo",
               t("category"),
               t("amount"),
               t("date"),
@@ -1043,6 +1440,41 @@ export default function ExpensesPage() {
                 <td style={S.td}>
                   <div style={S.tdName}>{e.itemName}</div>
                   {e.noted && <div style={S.tdNote}>{e.noted}</div>}
+                </td>
+                {/* ── IMAGE COLUMN ── */}
+                <td style={{ ...S.td, width: "56px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "4px",
+                      alignItems: "center",
+                    }}
+                  >
+                    {e.imageUrl && (
+                      <ImgThumb
+                        src={e.imageUrl}
+                        onOpen={setLightbox}
+                        size={36}
+                      />
+                    )}
+                    {e.imageQr && (
+                      <ImgThumb
+                        src={e.imageQr}
+                        onOpen={setLightbox}
+                        size={36}
+                      />
+                    )}
+                    {!e.imageUrl && !e.imageQr && (
+                      <span
+                        style={{
+                          color: "var(--text-secondary)",
+                          fontSize: "11px",
+                        }}
+                      >
+                        —
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td style={S.td}>
                   <CatBadge cat={e.category} />
@@ -1091,7 +1523,7 @@ export default function ExpensesPage() {
     </div>
   );
 
-  /* ── VIEW: ROW ── */
+  /* ── ROW VIEW ── */
   const RowView = () => (
     <div>
       {paginated.map((e) => {
@@ -1108,7 +1540,16 @@ export default function ExpensesPage() {
             }
           >
             <div style={S.rowStripe(cm.color)} />
-            <span style={S.rowEmoji}>{cm.emoji}</span>
+            {/* thumbnail replaces emoji if image exists */}
+            {e.imageUrl || e.imageQr ? (
+              <ImgThumb
+                src={e.imageUrl || e.imageQr}
+                onOpen={setLightbox}
+                size={38}
+              />
+            ) : (
+              <span style={S.rowEmoji}>{cm.emoji}</span>
+            )}
             <div style={S.rowBody}>
               <div style={S.rowName}>{e.itemName}</div>
               {e.noted && <div style={S.rowNote}>{e.noted}</div>}
@@ -1122,6 +1563,10 @@ export default function ExpensesPage() {
             <div style={S.rowDate} className="hide-sm">
               {formatDate(e.date, language, "medium")}
             </div>
+            {/* show both thumbs if both images exist */}
+            {e.imageUrl && e.imageQr && (
+              <ImgThumb src={e.imageQr} onOpen={setLightbox} size={32} />
+            )}
             <div
               style={{ flexShrink: 0, textAlign: "right", minWidth: "72px" }}
             >
@@ -1229,31 +1674,18 @@ export default function ExpensesPage() {
   /* ── RENDER ── */
   return (
     <>
-      {/* Keyframe injection */}
       <style>{`
-        @keyframes epFadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: none; }
-        }
-        .ep-add-btn:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 28px rgba(99,102,241,0.45) !important; }
-        @media (max-width: 900px) {
-          .ep-stat-bar  { grid-template-columns: repeat(2,1fr) !important; }
-          .ep-filter-grid { grid-template-columns: 1fr 1fr !important; }
-          .ep-box-grid  { grid-template-columns: repeat(auto-fill,minmax(180px,1fr)) !important; }
-        }
-        @media (max-width: 580px) {
-          .ep-filter-grid { grid-template-columns: 1fr !important; }
-          .ep-box-grid    { grid-template-columns: 1fr 1fr !important; }
-          .hide-sm  { display: none !important; }
-        }
-        @media (max-width: 400px) {
-          .ep-box-grid { grid-template-columns: 1fr !important; }
-          .hide-md { display: none !important; }
-        }
+        @keyframes epFadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+        @keyframes lbFadeIn  { from { opacity:0 } to { opacity:1 } }
+        @keyframes lbScaleIn { from { opacity:0; transform:scale(0.93) } to { opacity:1; transform:scale(1) } }
+        .ep-add-btn:hover { transform:translateY(-2px) !important; box-shadow:0 8px 28px rgba(99,102,241,0.45) !important; }
+        @media (max-width:900px)  { .ep-stat-bar { grid-template-columns:repeat(2,1fr) !important; } .ep-filter-grid { grid-template-columns:1fr 1fr !important; } .ep-box-grid { grid-template-columns:repeat(auto-fill,minmax(180px,1fr)) !important; } }
+        @media (max-width:580px)  { .ep-filter-grid { grid-template-columns:1fr !important; } .ep-box-grid { grid-template-columns:1fr 1fr !important; } .hide-sm { display:none !important; } }
+        @media (max-width:400px)  { .ep-box-grid { grid-template-columns:1fr !important; } .hide-md { display:none !important; } }
       `}</style>
 
       <div style={S.page}>
-        {/* ── HEADER ── */}
+        {/* HEADER */}
         <div style={S.header}>
           <div>
             <h1 style={S.h1}>💸 {t("expenses")}</h1>
@@ -1274,7 +1706,7 @@ export default function ExpensesPage() {
           </button>
         </div>
 
-        {/* ── STAT BAR ── */}
+        {/* STAT BAR */}
         <div className="ep-stat-bar" style={S.statBar}>
           <StatCard
             label="Total spent"
@@ -1308,7 +1740,7 @@ export default function ExpensesPage() {
           />
         </div>
 
-        {/* ── FILTERS ── */}
+        {/* FILTERS */}
         <div style={S.filterPanel}>
           <div className="ep-filter-grid" style={S.filterGrid}>
             <div style={S.searchWrap}>
@@ -1370,9 +1802,8 @@ export default function ExpensesPage() {
           </div>
         </div>
 
-        {/* ── MAIN CARD ── */}
+        {/* MAIN CARD */}
         <div style={S.mainCard}>
-          {/* toolbar */}
           <div style={S.toolbar}>
             <span style={S.toolbarLeft}>
               <strong style={{ color: "var(--text-primary)" }}>
@@ -1388,7 +1819,6 @@ export default function ExpensesPage() {
                 flexWrap: "wrap",
               }}
             >
-              {/* size picker */}
               <div style={S.sizeRow}>
                 <span style={S.sizeLabel}>Show:</span>
                 {PAGE_SIZE_OPTIONS.map((opt) => (
@@ -1404,7 +1834,6 @@ export default function ExpensesPage() {
                   </button>
                 ))}
               </div>
-              {/* view toggle */}
               <div style={S.viewToggle}>
                 {[
                   { key: "box", label: "Box", Icon: IcBox },
@@ -1425,7 +1854,6 @@ export default function ExpensesPage() {
             </div>
           </div>
 
-          {/* content */}
           {loading ? (
             <div
               style={{
@@ -1464,7 +1892,7 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* ── MODALS ── */}
+      {/* MODALS */}
       <ExpenseModal
         isOpen={addModal}
         onClose={() => {
@@ -1481,6 +1909,9 @@ export default function ExpensesPage() {
         loading={deleting}
       />
       <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
+
+      {/* LIGHTBOX */}
+      <Lightbox src={lightbox} onClose={() => setLightbox(null)} />
     </>
   );
 }
