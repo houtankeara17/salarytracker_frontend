@@ -16,6 +16,7 @@ import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 import ExpensesPage from "./pages/ExpensesPage";
 import SalaryPage from "./pages/SalaryPage";
+import BonusPage from "./pages/BonusPage";
 import SavingsPage from "./pages/SavingsPage";
 import TripsPage from "./pages/TripsPage";
 import GoalsPage from "./pages/GoalsPage";
@@ -71,6 +72,7 @@ function App() {
                       <Route path="/expenses" element={<ExpensesPage />} />
                       <Route path="/salary" element={<SalaryPage />} />
                       <Route path="/savings" element={<SavingsPage />} />
+                      <Route path="/bonus" element={<BonusPage />} />
                       <Route path="/trips" element={<TripsPage />} />
                       <Route path="/goals" element={<GoalsPage />} />
                       <Route path="/givings" element={<GivingsPage />} />

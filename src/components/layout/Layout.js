@@ -13,6 +13,7 @@ const navItems = [
   { path: "/dashboard", icon: "📊", key: "dashboard", color: "#7C6BFF" },
   { path: "/expenses", icon: "💸", key: "expenses", color: "#FF6B9D" },
   { path: "/salary", icon: "💰", key: "salary", color: "#00D4AA" },
+  { path: "/bonus", icon: "🎁", key: "bonus", color: "#f59e0b" },
   { path: "/savings", icon: "🏦", key: "savings", color: "#FFB547" },
   { path: "/trips", icon: "✈️", key: "trips", color: "#60CFFF" },
   { path: "/goals", icon: "🎯", key: "goals", color: "#FF8C6B" },

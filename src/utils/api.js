@@ -110,6 +110,17 @@ export const salaryAPI = {
 };
 
 // ===============================
+// Bonus API
+// ===============================
+export const bonusAPI = {
+  getAll: (params) => api.get("/bonuses", { params }),
+  getOne: (id) => api.get(`/bonuses/${id}`),
+  create: (data) => api.post("/bonuses", data),
+  update: (id, data) => api.put(`/bonuses/${id}`, data),
+  delete: (id) => api.delete(`/bonuses/${id}`),
+};
+
+// ===============================
 // Savings API
 // ===============================
 export const savingAPI = {
