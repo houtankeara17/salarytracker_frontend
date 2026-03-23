@@ -26,6 +26,50 @@ const PAYMENT_METHODS = [
   { value: "transfer", icon: "🏦" },
 ];
 
+/* ─────────────────────────────────────────────
+   SPENDING LIMIT CONSTANTS
+───────────────────────────────────────────── */
+const LIMIT_USD = 5;
+const LIMIT_KHR = 20000;
+
+const LIMIT_MESSAGES = [
+  {
+    icon: "⚠️",
+    en: "Cannot spend more than $5 or 20,000 ៛",
+    kh: "មិនអាចចំណាយលើស $5 ឬ 20,000 រៀលបានទេ",
+  },
+  {
+    icon: "💰",
+    en: "Please save your money instead of spending.",
+    kh: "សូមរក្សាទុកប្រាក់ជំនួសការចំណាយ",
+  },
+  {
+    icon: "🚫",
+    en: "Payment above the limit is blocked.",
+    kh: "ការបង់ប្រាក់លើសកំណត់ត្រូវបានបិទ",
+  },
+  {
+    icon: "🌱",
+    en: "Spend less to save more.",
+    kh: "ចំណាយតិចៗ ដើម្បីរក្សាទុកច្រើនៗ",
+  },
+  {
+    icon: "🔒",
+    en: "Overspending is not allowed. Secure your money by saving.",
+    kh: "ការចំណាយលើសកំណត់ មិនអនុញ្ញាត។ សូមរក្សាទុកប្រាក់ ដើម្បីមានសុវត្ថិភាព",
+  },
+  {
+    icon: "👉",
+    en: "Stop paying too much, start saving today.",
+    kh: "បញ្ឈប់ការចំណាយច្រើន ហើយចាប់ផ្តើមរក្សាទុកថ្ងៃនេះ",
+  },
+  {
+    icon: "💡",
+    en: "Saving now builds comfort later.",
+    kh: "ការរក្សាទុកថ្ងៃនេះ បង្កើតភាពសុខស្រួលនៅពេលក្រោយ",
+  },
+];
+
 const defaultForm = {
   itemName: "",
   category: "food",
@@ -199,7 +243,6 @@ const S = {
     boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
     letterSpacing: "0.1px",
   },
-  // Image upload zone
   uploadZone: {
     border: "1.5px dashed rgba(99,102,241,0.3)",
     borderRadius: "12px",
@@ -304,7 +347,6 @@ function ImageUploadZone({
           >
             ✕
           </button>
-          {/* small re-upload chip */}
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
@@ -361,6 +403,418 @@ function ImageUploadZone({
   );
 }
 
+/* ─────────────────────────────────────────────
+   SPENDING LIMIT MODAL
+   - "Cancel / Edit"   → onClose() only  → user goes back to fix the form
+   - "I Understand"    → onClose() + onConfirm() → expense saves anyway
+───────────────────────────────────────────── */
+function SpendingLimitModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  amountUSD,
+  amountKHR,
+}) {
+  const [msgIdx, setMsgIdx] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setMsgIdx(0);
+    setVisible(true);
+    const iv = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setMsgIdx((prev) => (prev + 1) % LIMIT_MESSAGES.length);
+        setVisible(true);
+      }, 220);
+    }, 2800);
+    return () => clearInterval(iv);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+  const msg = LIMIT_MESSAGES[msgIdx];
+
+  const handleCancelEdit = () => {
+    // Just close the warning → user is back on the expense form to fix the amount
+    onClose();
+  };
+
+  const handleUnderstand = () => {
+    // Close the warning AND trigger the actual save
+    onClose();
+    if (onConfirm) onConfirm();
+  };
+
+  return (
+    <>
+      <style>{`
+        @keyframes slmFadeIn  { from { opacity:0 } to { opacity:1 } }
+        @keyframes slmScaleIn { from { opacity:0; transform:scale(0.88) translateY(16px) } to { opacity:1; transform:scale(1) translateY(0) } }
+        @keyframes slmPulse   { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+        @keyframes slmShimmer { 0%,100%{opacity:0.7} 50%{opacity:1} }
+      `}</style>
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 3000,
+          background: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(10px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "16px",
+          animation: "slmFadeIn 0.2s ease",
+        }}
+        onClick={handleCancelEdit}
+      >
+        <div
+          style={{
+            background: "#13131a",
+            border: "1px solid rgba(225,29,72,0.25)",
+            borderRadius: "22px",
+            width: "100%",
+            maxWidth: "400px",
+            overflow: "hidden",
+            boxShadow:
+              "0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)",
+            animation: "slmScaleIn 0.28s cubic-bezier(.16,1,.3,1)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ── Red header ── */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, #be123c, #e11d48)",
+              padding: "22px 22px 18px",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                width: "54px",
+                height: "54px",
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.15)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "26px",
+                marginBottom: "12px",
+                animation: "slmPulse 2s ease-in-out infinite",
+              }}
+            >
+              🚫
+            </div>
+            <div
+              style={{
+                fontSize: "16px",
+                fontWeight: 700,
+                color: "#fff",
+                letterSpacing: "-0.2px",
+                fontFamily: "'Syne', sans-serif",
+              }}
+            >
+              Spending Limit Exceeded
+            </div>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "rgba(255,255,255,0.72)",
+                marginTop: "3px",
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              ការចំណាយលើសកំណត់
+            </div>
+            {/* X closes → back to form */}
+            <button
+              onClick={handleCancelEdit}
+              style={{
+                position: "absolute",
+                top: "14px",
+                right: "14px",
+                width: "30px",
+                height: "30px",
+                borderRadius: "8px",
+                background: "rgba(255,255,255,0.15)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                color: "#fff",
+                fontSize: "13px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(ev) =>
+                (ev.currentTarget.style.background = "rgba(255,255,255,0.25)")
+              }
+              onMouseLeave={(ev) =>
+                (ev.currentTarget.style.background = "rgba(255,255,255,0.15)")
+              }
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* ── Body ── */}
+          <div style={{ padding: "16px 20px 20px" }}>
+            {/* Amount entered chip */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 14px",
+                borderRadius: "99px",
+                background: "rgba(225,29,72,0.1)",
+                border: "1px solid rgba(225,29,72,0.25)",
+                marginBottom: "12px",
+              }}
+            >
+              <span
+                style={{ fontSize: "11px", color: "#f43f5e", fontWeight: 700 }}
+              >
+                Amount entered:
+              </span>
+              <span
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: "#f43f5e",
+                  fontFamily: "'DM Mono', monospace",
+                }}
+              >
+                ${typeof amountUSD === "number" ? amountUSD.toFixed(2) : "0.00"}
+              </span>
+              {amountKHR > 0 && (
+                <span
+                  style={{ fontSize: "11px", color: "#f43f5e", opacity: 0.7 }}
+                >
+                  / {Math.round(amountKHR).toLocaleString()} ៛
+                </span>
+              )}
+            </div>
+
+            {/* Limit info box */}
+            <div
+              style={{
+                padding: "10px 14px",
+                background: "rgba(255,255,255,0.04)",
+                borderRadius: "10px",
+                border: "1px solid rgba(255,255,255,0.08)",
+                marginBottom: "14px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: "#666",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  marginBottom: "7px",
+                }}
+              >
+                Daily limit per transaction
+              </div>
+              <div
+                style={{ display: "flex", gap: "18px", alignItems: "center" }}
+              >
+                <div>
+                  <span
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 700,
+                      color: "#e8e8f0",
+                      fontFamily: "'DM Mono', monospace",
+                    }}
+                  >
+                    $5.00
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      color: "#555",
+                      marginLeft: "4px",
+                    }}
+                  >
+                    USD
+                  </span>
+                </div>
+                <div
+                  style={{
+                    width: "1px",
+                    height: "20px",
+                    background: "rgba(255,255,255,0.08)",
+                  }}
+                />
+                <div>
+                  <span
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 700,
+                      color: "#e8e8f0",
+                      fontFamily: "'DM Mono', monospace",
+                    }}
+                  >
+                    20,000 ៛
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      color: "#555",
+                      marginLeft: "4px",
+                    }}
+                  >
+                    KHR
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Cycling message card */}
+            <div
+              style={{
+                padding: "14px",
+                borderRadius: "12px",
+                background: "rgba(245,158,11,0.08)",
+                border: "1px solid rgba(245,158,11,0.2)",
+                minHeight: "80px",
+                marginBottom: "14px",
+                transition: "opacity 0.2s ease",
+                opacity: visible ? 1 : 0,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "22px",
+                  marginBottom: "7px",
+                  animation: "slmShimmer 5.5s ease-in-out infinite",
+                  display: "inline-block",
+                }}
+              >
+                {msg.icon}
+              </div>
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: "#fbbf24",
+                  lineHeight: 1.5,
+                  marginBottom: "5px",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                {msg.en}
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#d97706",
+                  lineHeight: 1.5,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                {msg.kh}
+              </div>
+            </div>
+
+            {/* Dot indicators */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "5px",
+                marginBottom: "16px",
+              }}
+            >
+              {LIMIT_MESSAGES.map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: i === msgIdx ? "18px" : "6px",
+                    height: "6px",
+                    borderRadius: "99px",
+                    background:
+                      i === msgIdx ? "#e11d48" : "rgba(255,255,255,0.12)",
+                    transition: "all 0.3s ease",
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* ── Action buttons ── */}
+            <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+              {/* Cancel / Edit → back to form, no save */}
+              <button
+                onClick={handleCancelEdit}
+                style={{
+                  flex: 1,
+                  padding: "11px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.05)",
+                  color: "#aaa",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={(ev) =>
+                  (ev.currentTarget.style.background = "rgba(255,255,255,0.09)")
+                }
+                onMouseLeave={(ev) =>
+                  (ev.currentTarget.style.background = "rgba(255,255,255,0.05)")
+                }
+              >
+                ✏️ Cancel / Edit
+              </button>
+
+              {/* I Understand → close warning + save the expense */}
+              <button
+                onClick={handleUnderstand}
+                style={{
+                  flex: 2,
+                  padding: "11px",
+                  borderRadius: "12px",
+                  border: "none",
+                  background: "linear-gradient(135deg, #be123c, #e11d48)",
+                  color: "#fff",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                  boxShadow: "0 4px 16px rgba(225,29,72,0.35)",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={(ev) => {
+                  ev.currentTarget.style.filter = "brightness(1.1)";
+                  ev.currentTarget.style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={(ev) => {
+                  ev.currentTarget.style.filter = "none";
+                  ev.currentTarget.style.transform = "none";
+                }}
+              >
+                I Understand — Save ✓
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   MAIN MODAL
+───────────────────────────────────────────── */
 export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
   const { t, language } = useApp();
   const [form, setForm] = useState(defaultForm);
@@ -368,6 +822,16 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
   const [qrPreview, setQrPreview] = useState(null);
   const [imgPreview, setImgPreview] = useState(null);
   const [banner, setBanner] = useState(null);
+
+  // Spending limit modal state
+  const [limitModal, setLimitModal] = useState(false);
+  const [limitAmounts, setLimitAmounts] = useState({ usd: 0, khr: 0 });
+
+  // Keep editData in a ref so executeSave always sees the latest value
+  const editDataRef = useRef(editData);
+  useEffect(() => {
+    editDataRef.current = editData;
+  }, [editData]);
 
   useEffect(() => {
     if (editData) {
@@ -418,17 +882,41 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
     return null;
   };
 
-  const handleSubmit = async () => {
-    const error = validateForm();
-    if (error) {
-      setBanner({ type: "error", title: error });
-      return;
+  /* ── Spending limit check — returns true if limit exceeded ── */
+  const checkSpendingLimit = (currentForm) => {
+    const f = currentForm || form;
+    const amt = Number(f.amount) || 0;
+    const qty = Number(f.quantity) || 1;
+    const total = amt * qty;
+    const rate = Number(f.exchangeRate) || 4100;
+
+    let amountUSD = 0;
+    let amountKHR = 0;
+
+    if (f.currency === "USD") {
+      amountUSD = total;
+      amountKHR = total * rate;
+    } else {
+      amountKHR = total;
+      amountUSD = total / rate;
     }
+
+    if (amountUSD > LIMIT_USD || amountKHR > LIMIT_KHR) {
+      setLimitAmounts({ usd: amountUSD, khr: amountKHR });
+      setLimitModal(true);
+      return true; // blocked — show warning
+    }
+    return false; // within limit — proceed
+  };
+
+  /* ── Core API save logic — called either directly or after "I Understand" ── */
+  const executeSave = async () => {
     setLoading(true);
     try {
-      if (editData) {
-        const res = await expenseAPI.update(editData._id, form);
-        const saved = extractItem(res) || { ...editData, ...form };
+      const currentEditData = editDataRef.current;
+      if (currentEditData) {
+        const res = await expenseAPI.update(currentEditData._id, form);
+        const saved = extractItem(res) || { ...currentEditData, ...form };
         onSuccess(saved);
       } else {
         const res = await expenseAPI.create(form);
@@ -440,6 +928,22 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  /* ── Submit handler ── */
+  const handleSubmit = async () => {
+    const error = validateForm();
+    if (error) {
+      setBanner({ type: "error", title: error });
+      return;
+    }
+
+    // If over limit → show warning; executeSave is passed as onConfirm
+    // so clicking "I Understand" will complete the save.
+    if (checkSpendingLimit()) return;
+
+    // Within limit → save immediately
+    await executeSave();
   };
 
   const totalPreview = () => {
@@ -673,6 +1177,8 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                   ))}
                 </div>
               </div>
+
+              {/* Amount preview */}
               <div style={S.amountPreview}>
                 <span
                   style={{ fontSize: "11px", color: "#666", fontWeight: 500 }}
@@ -690,9 +1196,35 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
                   {totalPreview()}
                 </span>
               </div>
+
+              {/* Spending limit hint */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginTop: "6px",
+                  padding: "7px 12px",
+                  borderRadius: "8px",
+                  background: "rgba(245,158,11,0.07)",
+                  border: "1px solid rgba(245,158,11,0.15)",
+                }}
+              >
+                <span style={{ fontSize: "12px" }}>⚠️</span>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    color: "#d97706",
+                    fontWeight: 600,
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  Limit: $5.00 / 20,000 ៛ per transaction
+                </span>
+              </div>
             </div>
 
-            {/* Exchange Rate */}
+            {/* Exchange Rate — KHR only */}
             {form.currency === "KHR" && (
               <div>
                 <div style={S.label}>
@@ -774,7 +1306,7 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
               </div>
             </div>
 
-            {/* ── IMAGE UPLOAD (general receipt / product photo) ── */}
+            {/* Item Photo */}
             <ImageUploadZone
               label="📷 Item Photo / Receipt (optional)"
               value={form.imageUrl}
@@ -854,6 +1386,17 @@ export default function ExpenseModal({ isOpen, onClose, editData, onSuccess }) {
       {banner && (
         <StatusBanner banner={banner} onDismiss={() => setBanner(null)} />
       )}
+
+      {/* Spending Limit Modal
+          onClose     → user clicked "Cancel / Edit" → back to form, no save
+          onConfirm   → user clicked "I Understand"  → save the expense anyway */}
+      <SpendingLimitModal
+        isOpen={limitModal}
+        onClose={() => setLimitModal(false)}
+        onConfirm={executeSave}
+        amountUSD={limitAmounts.usd}
+        amountKHR={limitAmounts.khr}
+      />
     </>
   );
 }

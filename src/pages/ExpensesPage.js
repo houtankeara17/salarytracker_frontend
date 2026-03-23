@@ -592,17 +592,6 @@ const S = {
     transition: "transform 0.18s,box-shadow 0.18s,border-color 0.18s",
     cursor: "default",
   },
-  boxAccent: (color) => ({
-    height: "3px",
-    background: `linear-gradient(90deg,${color},${color}88)`,
-  }),
-  boxBody: { padding: "13px 14px" },
-  boxTop: {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: "10px",
-  },
   boxEmojiWrap: (bg, border) => ({
     width: "38px",
     height: "38px",
@@ -623,37 +612,6 @@ const S = {
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
-  boxNote: {
-    fontSize: "11px",
-    color: "var(--text-secondary)",
-    lineHeight: 1.4,
-    marginBottom: "10px",
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
-  },
-  boxDivider: { borderTop: "1px solid var(--border)", margin: "10px 0" },
-  boxAmountVal: {
-    fontFamily: "'DM Mono',monospace",
-    fontSize: "16px",
-    fontWeight: 700,
-    color: "#6366f1",
-  },
-  boxAmountSub: {
-    fontSize: "10px",
-    color: "var(--text-secondary)",
-    marginTop: "1px",
-  },
-  boxFooter: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: "10px",
-    flexWrap: "wrap",
-    gap: "5px",
-  },
-  boxDate: { fontSize: "11px", color: "var(--text-secondary)" },
 
   /* TABLE VIEW */
   tableWrap: { overflowX: "auto" },
@@ -800,7 +758,7 @@ function PayBadge({ method }) {
 
 function ActionBtns({ e, onEdit, onDelete }) {
   return (
-    <div style={{ display: "flex", gap: "2px" }}>
+    <div style={{ display: "flex", gap: "2px", flexShrink: 0 }}>
       {[
         { icon: "✏️", label: "Edit", fn: () => onEdit(e) },
         { icon: "🗑️", label: "Delete", fn: () => onDelete(e._id) },
@@ -818,6 +776,7 @@ function ActionBtns({ e, onEdit, onDelete }) {
             fontSize: "13px",
             color: "var(--text-secondary)",
             transition: "background 0.12s",
+            flexShrink: 0,
           }}
           onMouseEnter={(ev) =>
             (ev.currentTarget.style.background = "var(--bg-primary)")
@@ -831,7 +790,6 @@ function ActionBtns({ e, onEdit, onDelete }) {
   );
 }
 
-/* Tiny clickable image thumbnail */
 function ImgThumb({ src, onOpen, size = 40 }) {
   if (!src) return null;
   return (
@@ -865,7 +823,6 @@ function ImgThumb({ src, onOpen, size = 40 }) {
   );
 }
 
-/* StatCard */
 function StatCard({ label, value, sub, accent }) {
   return (
     <div style={{ ...S.statCard, borderTop: `3px solid ${accent}` }}>
@@ -896,7 +853,7 @@ export default function ExpensesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [banner, setBanner] = useState(null);
-  const [lightbox, setLightbox] = useState(null); // ← image lightbox
+  const [lightbox, setLightbox] = useState(null);
 
   const editDataRef = useRef(editData);
   useEffect(() => {
@@ -1019,8 +976,8 @@ export default function ExpensesPage() {
     <div style={S.boxGrid}>
       {paginated.map((e) => {
         const cm = CAT_META[e.category] || CAT_META.other;
-        const displayImg = e.imageUrl || null; // main photo
-        const qrImg = e.imageQr || null; // QR receipt
+        const displayImg = e.imageUrl || null;
+        const qrImg = e.imageQr || null;
         const hasImg = !!(displayImg || qrImg);
 
         return (
@@ -1038,9 +995,8 @@ export default function ExpensesPage() {
               ev.currentTarget.style.borderColor = "var(--border)";
             }}
           >
-            {/* ── CARD HEADER: image OR decorative banner ── */}
+            {/* ── CARD HEADER ── */}
             {hasImg ? (
-              /* ── HAS IMAGE: photo banner ── */
               <div
                 style={{
                   position: "relative",
@@ -1068,7 +1024,6 @@ export default function ExpensesPage() {
                     (ev.currentTarget.style.transform = "scale(1)")
                   }
                 />
-                {/* dark gradient fade into card body */}
                 <div
                   style={{
                     position: "absolute",
@@ -1078,7 +1033,6 @@ export default function ExpensesPage() {
                     pointerEvents: "none",
                   }}
                 />
-                {/* view chip */}
                 <span
                   style={{
                     position: "absolute",
@@ -1091,13 +1045,11 @@ export default function ExpensesPage() {
                     fontSize: "10px",
                     color: "rgba(255,255,255,0.8)",
                     fontWeight: 600,
-                    cursor: "zoom-in",
                     pointerEvents: "none",
                   }}
                 >
                   🔍 View
                 </span>
-                {/* if both imageUrl AND imageQr exist, show QR thumb in corner */}
                 {displayImg && qrImg && (
                   <img
                     src={qrImg}
@@ -1123,7 +1075,7 @@ export default function ExpensesPage() {
                 )}
               </div>
             ) : (
-              /* ── NO IMAGE: rich decorative header ── */
+              /* ── NO IMAGE: decorative header ── */
               <div
                 style={{
                   position: "relative",
@@ -1133,7 +1085,6 @@ export default function ExpensesPage() {
                   borderBottom: `1px solid ${cm.border}`,
                 }}
               >
-                {/* SVG pattern — subtle dot grid */}
                 <svg
                   width="100%"
                   height="100%"
@@ -1158,8 +1109,6 @@ export default function ExpensesPage() {
                     fill={`url(#dot-${e._id})`}
                   />
                 </svg>
-
-                {/* large faded emoji as watermark */}
                 <span
                   style={{
                     position: "absolute",
@@ -1175,17 +1124,9 @@ export default function ExpensesPage() {
                 >
                   {cm.emoji}
                 </span>
-
-                {/* top-left: category pill */}
+                {/* category pill — top left */}
                 <div
-                  style={{
-                    position: "absolute",
-                    top: "10px",
-                    left: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
+                  style={{ position: "absolute", top: "10px", left: "12px" }}
                 >
                   <span
                     style={{
@@ -1207,8 +1148,7 @@ export default function ExpensesPage() {
                     </span>
                   </span>
                 </div>
-
-                {/* bottom-left: payment method */}
+                {/* payment method — bottom left */}
                 <div
                   style={{ position: "absolute", bottom: "10px", left: "12px" }}
                 >
@@ -1231,8 +1171,7 @@ export default function ExpensesPage() {
                     {PAY_META[e.paymentMethod]?.label}
                   </span>
                 </div>
-
-                {/* top-right: action buttons */}
+                {/* action buttons — top right (always visible, absolute positioned) */}
                 <div style={{ position: "absolute", top: "6px", right: "6px" }}>
                   <ActionBtns e={e} onEdit={openEdit} onDelete={setDeleteId} />
                 </div>
@@ -1249,17 +1188,31 @@ export default function ExpensesPage() {
 
             {/* ── CARD BODY ── */}
             <div style={{ padding: "12px 14px 14px" }}>
-              {/* top row: emoji icon + actions (only shown when has image — no-image cards have actions in header) */}
+              {/*
+                FIX: title row — flex row that NEVER lets the name push buttons off-screen.
+                - outer div: minWidth:0 + flex:1 so it shrinks within the parent
+                - inner name div: minWidth:0 + flex:1 + overflow:hidden to clip long text
+                - emoji icon: flexShrink:0 so it never squishes
+                - action button wrapper: flexShrink:0 so buttons never get displaced
+              */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "flex-start",
                   justifyContent: "space-between",
                   marginBottom: "9px",
+                  gap: "6px",
                 }}
               >
+                {/* left side: emoji + name/meta */}
                 <div
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    minWidth: 0,
+                    flex: 1,
+                  }}
                 >
                   <div
                     style={{
@@ -1267,11 +1220,12 @@ export default function ExpensesPage() {
                       width: "32px",
                       height: "32px",
                       fontSize: "16px",
+                      flexShrink: 0,
                     }}
                   >
                     {cm.emoji}
                   </div>
-                  <div style={{ minWidth: 0 }}>
+                  <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
                     <div
                       style={{ ...S.boxName, marginBottom: 0 }}
                       title={e.itemName}
@@ -1283,6 +1237,9 @@ export default function ExpensesPage() {
                         fontSize: "10px",
                         color: "var(--text-secondary)",
                         marginTop: "1px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       qty {e.quantity ?? 1} ·{" "}
@@ -1290,9 +1247,16 @@ export default function ExpensesPage() {
                     </div>
                   </div>
                 </div>
-                {/* action buttons only for image cards (no-image has them in the header) */}
+
+                {/* right side: action buttons — only for image cards */}
                 {hasImg && (
-                  <ActionBtns e={e} onEdit={openEdit} onDelete={setDeleteId} />
+                  <div style={{ flexShrink: 0 }}>
+                    <ActionBtns
+                      e={e}
+                      onEdit={openEdit}
+                      onDelete={setDeleteId}
+                    />
+                  </div>
                 )}
               </div>
 
@@ -1353,8 +1317,6 @@ export default function ExpensesPage() {
                       : `$${e.amount}`}
                   </div>
                 </div>
-
-                {/* for image cards: show pay+date; for no-image cards: just date (pay is already in header) */}
                 {hasImg ? (
                   <div
                     style={{
@@ -1441,7 +1403,6 @@ export default function ExpensesPage() {
                   <div style={S.tdName}>{e.itemName}</div>
                   {e.noted && <div style={S.tdNote}>{e.noted}</div>}
                 </td>
-                {/* ── IMAGE COLUMN ── */}
                 <td style={{ ...S.td, width: "56px" }}>
                   <div
                     style={{
@@ -1540,7 +1501,6 @@ export default function ExpensesPage() {
             }
           >
             <div style={S.rowStripe(cm.color)} />
-            {/* thumbnail replaces emoji if image exists */}
             {e.imageUrl || e.imageQr ? (
               <ImgThumb
                 src={e.imageUrl || e.imageQr}
@@ -1563,7 +1523,6 @@ export default function ExpensesPage() {
             <div style={S.rowDate} className="hide-sm">
               {formatDate(e.date, language, "medium")}
             </div>
-            {/* show both thumbs if both images exist */}
             {e.imageUrl && e.imageQr && (
               <ImgThumb src={e.imageQr} onOpen={setLightbox} size={32} />
             )}
