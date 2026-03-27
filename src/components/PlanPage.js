@@ -1,6 +1,4 @@
-// src/components/PlanPage.js — Redesigned to match Dashboard v4 design system
-// Reusable page for Trips ✈️, Goals 🎯, Givings 🤝, Others 📦
-// All logic identical — only UI updated
+// src/components/PlanPage.js — with Month/Year filter + Prev/Next navigation
 import React, { useState, useEffect, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import PlanModal from "./modals/PlanModal";
@@ -20,7 +18,6 @@ const STATUS_COLORS = {
     border: "rgba(255,181,71,0.3)",
     text: "#FFB547",
   },
-  // Completed: electric violet — distinct, premium, clearly not "basic green"
   completed: {
     bg: "rgba(167,139,250,0.12)",
     border: "rgba(167,139,250,0.35)",
@@ -64,6 +61,21 @@ const TYPE_ACCENTS = {
   },
 };
 
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 /* ─────────────────────────────────────────────────────
    Extra CSS
 ───────────────────────────────────────────────────── */
@@ -100,6 +112,46 @@ const PP_CSS = `
 }
 .pp-subtitle-item { display: flex; align-items: center; gap: 5px; }
 .pp-subtitle-dot  { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Month navigator ── */
+.pp-month-nav {
+  display: flex; align-items: center; gap: 0;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--dash-tile-bg, rgba(255,255,255,0.03));
+  flex-shrink: 0;
+}
+.pp-month-arrow {
+  width: 34px; height: 34px;
+  background: transparent; border: none;
+  color: var(--text-secondary); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .14s; font-family: inherit;
+}
+.pp-month-arrow:hover {
+  background: rgba(99,102,241,0.1); color: var(--accent, #6366f1);
+}
+.pp-month-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+.pp-month-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--text-primary); padding: 0 10px; white-space: nowrap;
+  border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+  height: 34px; display: flex; align-items: center; min-width: 110px;
+  justify-content: center; text-transform: uppercase;
+}
+.pp-month-all-btn {
+  height: 34px; padding: 0 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  background: transparent; border: none; border-left: 1px solid var(--border);
+  color: var(--text-secondary); cursor: pointer; transition: all .14s;
+  white-space: nowrap;
+}
+.pp-month-all-btn:hover, .pp-month-all-btn.active {
+  background: rgba(99,102,241,0.1); color: var(--accent, #6366f1);
+}
+.pp-month-all-btn.active { font-weight: 700; }
 
 /* ── Stats band ── */
 .pp-stats-band {
@@ -371,6 +423,16 @@ function injectCSS() {
   _pp_injected = true;
 }
 
+/* ── Helper: get the "best" date from an item to decide which month it belongs to ── */
+function getItemMonth(item) {
+  // Prefer startDate, then date, then targetDate, then endDate
+  const raw = item.startDate || item.date || item.targetDate || item.endDate;
+  if (!raw) return null;
+  const d = new Date(raw);
+  if (isNaN(d)) return null;
+  return { year: d.getFullYear(), month: d.getMonth() }; // month 0-indexed
+}
+
 export default function PlanPage({ type, icon, apiCall, config }) {
   injectCSS();
 
@@ -384,11 +446,18 @@ export default function PlanPage({ type, icon, apiCall, config }) {
   const [filterStatus, setFilterStatus] = useState("");
   const [banner, setBanner] = useState(null);
 
+  // Month navigation — default to current month; null = "All"
+  const now = new Date();
+  const [viewYear, setViewYear] = useState(now.getFullYear());
+  const [viewMonth, setViewMonth] = useState(now.getMonth()); // 0-indexed
+  const [showAll, setShowAll] = useState(false); // true = "All" mode
+
   const editDataRef = useRef(editData);
   useEffect(() => {
     editDataRef.current = editData;
   }, [editData]);
 
+  /* ── Load all items (no server-side month filter — we filter client-side) ── */
   const load = async () => {
     setLoading(true);
     try {
@@ -406,6 +475,41 @@ export default function PlanPage({ type, icon, apiCall, config }) {
     load();
   }, [filterStatus]);
 
+  /* ── Month navigation helpers ── */
+  const goToPrevMonth = () => {
+    setShowAll(false);
+    if (viewMonth === 0) {
+      setViewYear((y) => y - 1);
+      setViewMonth(11);
+    } else {
+      setViewMonth((m) => m - 1);
+    }
+  };
+  const goToNextMonth = () => {
+    setShowAll(false);
+    if (viewMonth === 11) {
+      setViewYear((y) => y + 1);
+      setViewMonth(0);
+    } else {
+      setViewMonth((m) => m + 1);
+    }
+  };
+  const goToAll = () => setShowAll(true);
+
+  // Disable "next" if we're at current month (can't see the future)
+  const isCurrentMonth =
+    viewYear === now.getFullYear() && viewMonth === now.getMonth();
+
+  /* ── Filter items by month (or show all) ── */
+  const visibleItems = showAll
+    ? items
+    : items.filter((item) => {
+        const m = getItemMonth(item);
+        if (!m) return false; // items with no date are hidden in month view
+        return m.year === viewYear && m.month === viewMonth;
+      });
+
+  /* ── Modal success ── */
   const handleModalSuccess = (savedItem) => {
     if (!savedItem) {
       load();
@@ -422,6 +526,7 @@ export default function PlanPage({ type, icon, apiCall, config }) {
     }
   };
 
+  /* ── Delete ── */
   const handleDelete = async () => {
     setDeleting(true);
     try {
@@ -436,12 +541,12 @@ export default function PlanPage({ type, icon, apiCall, config }) {
     }
   };
 
+  /* ── Progress helpers ── */
   const getProgress = (item) => {
     const saved = item.savedAmount ?? item.givenAmount ?? item.paidAmount ?? 0;
     const target = item.targetAmount || 1;
     return Math.min(100, (saved / target) * 100);
   };
-
   const getSavedField = (item) =>
     item.savedAmount !== undefined
       ? item.savedAmount
@@ -466,14 +571,19 @@ export default function PlanPage({ type, icon, apiCall, config }) {
     label: "Plans",
   };
 
-  /* ── Derived stats ── */
-  const totalTarget = items.reduce(
+  /* ── Derived stats (from visibleItems) ── */
+  const totalTarget = visibleItems.reduce(
     (s, i) => s + toUSD(i, i.targetAmount || 0),
     0,
   );
-  const totalSaved = items.reduce((s, i) => s + toUSD(i, getSavedField(i)), 0);
-  const completedCnt = items.filter((i) => i.status === "completed").length;
-  const ongoingCnt = items.filter((i) => i.status === "ongoing").length;
+  const totalSaved = visibleItems.reduce(
+    (s, i) => s + toUSD(i, getSavedField(i)),
+    0,
+  );
+  const completedCnt = visibleItems.filter(
+    (i) => i.status === "completed",
+  ).length;
+  const ongoingCnt = visibleItems.filter((i) => i.status === "ongoing").length;
 
   /* ── Status filter pill colors ── */
   const PILL_COLORS = {
@@ -499,7 +609,8 @@ export default function PlanPage({ type, icon, apiCall, config }) {
                 className="pp-subtitle-dot"
                 style={{ background: accent.main }}
               />
-              {formatNum(items.length)} {t("items")}
+              {formatNum(visibleItems.length)} {t("items")}
+              {!showAll && ` · ${MONTH_NAMES[viewMonth]} ${viewYear}`}
             </span>
             {completedCnt > 0 && (
               <span className="pp-subtitle-item">
@@ -521,25 +632,66 @@ export default function PlanPage({ type, icon, apiCall, config }) {
             )}
           </div>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setEditData(null);
-            setModal(true);
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            flexWrap: "wrap",
           }}
         >
-          + {t("add")} {t(type)}
-        </button>
+          {/* ── Month navigator ── */}
+          <div className="pp-month-nav">
+            <button
+              className="pp-month-arrow"
+              onClick={goToPrevMonth}
+              title="Previous month"
+            >
+              ‹
+            </button>
+            <div className="pp-month-label">
+              {showAll
+                ? "ALL TIME"
+                : `${MONTH_NAMES[viewMonth].slice(0, 3).toUpperCase()} ${viewYear}`}
+            </div>
+            <button
+              className="pp-month-arrow"
+              onClick={goToNextMonth}
+              disabled={!showAll && isCurrentMonth}
+              title="Next month"
+            >
+              ›
+            </button>
+            <button
+              className={`pp-month-all-btn${showAll ? " active" : ""}`}
+              onClick={goToAll}
+              title="Show all time"
+            >
+              All
+            </button>
+          </div>
+
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setEditData(null);
+              setModal(true);
+            }}
+          >
+            + {t("add")} {t(type)}
+          </button>
+        </div>
       </div>
 
       {/* ── Stats band ── */}
-      {!loading && items.length > 0 && (
+      {!loading && visibleItems.length > 0 && (
         <div className="pp-stats-band">
           {[
             {
               label: "Total Target",
               val: formatAmount(totalTarget),
-              sub: `across ${items.length} items`,
+              sub: `across ${visibleItems.length} items`,
               color: accent.main,
             },
             {
@@ -551,13 +703,13 @@ export default function PlanPage({ type, icon, apiCall, config }) {
             {
               label: "Completed",
               val: completedCnt,
-              sub: `of ${items.length} items`,
+              sub: `of ${visibleItems.length} items`,
               color: "#00D4AA",
             },
             {
               label: "In Progress",
               val: ongoingCnt,
-              sub: `currently active`,
+              sub: "currently active",
               color: "#FFB547",
             },
           ].map((s, i) => (
@@ -567,11 +719,7 @@ export default function PlanPage({ type, icon, apiCall, config }) {
               style={{ "--pt-c": s.color }}
             >
               <div className="pp-st-label">{s.label}</div>
-              <div className="pp-st-val">
-                {typeof s.val === "number" && s.val % 1 === 0 && s.val < 1000
-                  ? s.val
-                  : s.val}
-              </div>
+              <div className="pp-st-val">{s.val}</div>
               <div className="pp-st-sub">{s.sub}</div>
             </div>
           ))}
@@ -587,10 +735,7 @@ export default function PlanPage({ type, icon, apiCall, config }) {
               <button
                 key={s || "all"}
                 className={`pp-filter-pill${filterStatus === s ? " active" : ""}`}
-                style={{
-                  "--pf-c": pc.c,
-                  "--pf-bg": pc.bg,
-                }}
+                style={{ "--pf-c": pc.c, "--pf-bg": pc.bg }}
                 onClick={() => setFilterStatus(s)}
               >
                 {s === "" ? "All" : t(s)}
@@ -600,8 +745,11 @@ export default function PlanPage({ type, icon, apiCall, config }) {
         </div>
         {!loading && (
           <span className="pp-count-badge">
-            {items.length} {items.length === 1 ? "item" : "items"}
+            {visibleItems.length} {visibleItems.length === 1 ? "item" : "items"}
             {filterStatus ? ` · ${t(filterStatus)}` : ""}
+            {!showAll
+              ? ` · ${MONTH_NAMES[viewMonth].slice(0, 3)} ${viewYear}`
+              : ""}
           </span>
         )}
       </div>
@@ -619,19 +767,25 @@ export default function PlanPage({ type, icon, apiCall, config }) {
               />
             ))}
         </div>
-      ) : items.length === 0 ? (
+      ) : visibleItems.length === 0 ? (
         <div className="pp-grid">
           <div className="card pp-empty">
             <span className="pp-empty-icon">{icon}</span>
-            <div className="pp-empty-title">No {t(type)} yet</div>
+            <div className="pp-empty-title">
+              {showAll
+                ? `No ${t(type)} yet`
+                : `No ${t(type)} in ${MONTH_NAMES[viewMonth]} ${viewYear}`}
+            </div>
             <div className="pp-empty-sub">
-              Add your first {t(type).toLowerCase()} to start tracking
+              {showAll
+                ? `Add your first ${t(type).toLowerCase()} to start tracking`
+                : `Try a different month or click "All" to see everything`}
             </div>
           </div>
         </div>
       ) : (
         <div className="pp-grid">
-          {items.map((item) => {
+          {visibleItems.map((item) => {
             const progress = getProgress(item);
             const saved = getSavedField(item);
             const sc = STATUS_COLORS[item.status] || STATUS_COLORS.planned;

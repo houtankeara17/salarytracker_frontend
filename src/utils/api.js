@@ -2,10 +2,10 @@
 import axios from "axios";
 
 /*
-  API Base URL
-  Local: http://localhost:5001/api
-  Production: https://salarytracker-backend.onrender.com/api
-*/
+      API Base URL
+      Local: http://localhost:5001/api
+      Production: https://salarytracker-backend.onrender.com/api
+    */
 
 const api = axios.create({
   baseURL:

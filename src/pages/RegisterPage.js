@@ -5,287 +5,340 @@ import { useApp } from "../context/AppContext";
 import StatusBanner from "../components/StatusBanner";
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,300;1,600;1,700&family=Jost:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
 
-  .rx-root *, .rx-root *::before, .rx-root *::after {
-    box-sizing: border-box; margin: 0; padding: 0;
+  .rp *, .rp *::before, .rp *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Shell ── */
+  .rp {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    font-family: 'Sora', sans-serif;
+    background: #0b1120;
+    color: #c8d8e8;
   }
 
-  .rx-root {
-    min-height: 100vh;
-    display: flex;
-    font-family: 'Jost', sans-serif;
-    background: #0a0a0a;
+  /* ── Left — Form ── */
+  .rp-left {
+    display: flex; align-items: center; justify-content: center;
+    padding: 52px 56px;
+    background: #0b1120;
     position: relative;
-    overflow: hidden;
   }
-
-  .rx-bg {
-    position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background:
-      radial-gradient(ellipse 900px 700px at 85% 50%, rgba(99,102,241,0.09) 0%, transparent 60%),
-      radial-gradient(ellipse 500px 500px at 10% 80%, rgba(129,140,248,0.06) 0%, transparent 55%),
-      radial-gradient(ellipse 400px 300px at 30% 10%, rgba(99,102,241,0.05) 0%, transparent 55%);
-  }
-
-  .rx-lines {
-    position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background-image: repeating-linear-gradient(
-      0deg,
-      rgba(255,255,255,0.012) 0px,
-      rgba(255,255,255,0.012) 1px,
-      transparent 1px,
-      transparent 80px
-    );
-  }
-
-  /* ── LEFT: form panel ── */
-  .rx-left {
-    width: 500px; flex-shrink: 0;
-    min-height: 100vh;
-    display: flex; flex-direction: column;
-    justify-content: center;
-    padding: 60px 60px 60px 72px;
-    position: relative; z-index: 1;
-    border-right: 1px solid rgba(255,255,255,0.04);
-  }
-  .rx-left::before {
+  .rp-left::after {
     content: '';
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent 8%, rgba(94,212,204,0.1) 35%, rgba(94,212,204,0.1) 65%, transparent 92%);
+  }
+
+  .rp-form-wrap {
+    width: 100%; max-width: 370px;
+    animation: slideIn 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s both;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Controls */
+  .rp-controls {
+    position: absolute; top: 28px; left: 28px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .rp-ctl-btn {
+    padding: 5px 10px; border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: 1px solid rgba(94,212,204,0.15);
+    background: rgba(94,212,204,0.04);
+    color: rgba(140,190,188,0.55);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .rp-ctl-btn:hover, .rp-ctl-btn.on { border-color: rgba(94,212,204,0.35); color: #5dd4c8; background: rgba(94,212,204,0.08); }
+  .rp-ctl-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1px solid rgba(94,212,204,0.15);
+    background: rgba(94,212,204,0.04);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; cursor: pointer; transition: all 0.2s;
+  }
+  .rp-ctl-icon:hover { border-color: rgba(94,212,204,0.35); background: rgba(94,212,204,0.08); }
+
+  /* Brand */
+  .rp-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .rp-brand-mark {
+    width: 40px; height: 40px;
+    background: #0b1a1a;
+    border: 1px solid rgba(94,212,204,0.28);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+  .rp-brand-name { font-size: 15px; font-weight: 600; color: #e0edec; letter-spacing: -0.02em; display: block; }
+  .rp-brand-tag { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(94,212,204,0.45); display: block; margin-top: 2px; }
+
+  /* Form header */
+  .rp-form-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: rgba(94,212,204,0.65);
+    margin-bottom: 14px;
+  }
+  .rp-tag-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: linear-gradient(135deg, #3bb8ad, #5dd4c8);
+    box-shadow: 0 0 0 2px rgba(59,184,173,0.18);
+    animation: rTagPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes rTagPulse {
+    0%,100%{box-shadow:0 0 0 2px rgba(59,184,173,0.18);}
+    50%{box-shadow:0 0 0 5px rgba(59,184,173,0.05);}
+  }
+
+  .rp-form-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 32px; font-weight: 400; color: #d8ecea;
+    letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 7px;
+  }
+  .rp-form-title em { font-style: italic; color: #5dd4c8; }
+  .rp-form-sub { font-size: 12px; font-weight: 300; color: rgba(140,185,183,0.48); line-height: 1.7; margin-bottom: 0; }
+
+  .rp-hr {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(94,212,204,0.1) 30%, rgba(94,212,204,0.1) 70%, transparent);
+    margin: 22px 0;
+  }
+
+  /* Fields */
+  .rp-field { margin-bottom: 13px; }
+  .rp-field-label {
+    display: block; font-family: 'DM Mono', monospace;
+    font-size: 9px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(140,185,183,0.38); margin-bottom: 7px;
+  }
+  .rp-input-row { position: relative; }
+  .rp-input-row input {
+    width: 100%; padding: 11px 42px 11px 42px;
+    border-radius: 10px; border: 1px solid rgba(94,212,204,0.1);
+    background: rgba(94,212,204,0.03); color: #d8ecea;
+    font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 400;
+    outline: none; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    caret-color: #5dd4c8;
+  }
+  .rp-input-row input::placeholder { color: rgba(140,185,183,0.27); font-weight: 300; }
+  .rp-input-row input:focus {
+    border-color: rgba(94,212,204,0.33);
+    background: rgba(94,212,204,0.05);
+    box-shadow: 0 0 0 3px rgba(94,212,204,0.07);
+  }
+  .rp-ico { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: 0.27; pointer-events: none; }
+  .rp-eye { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 12px; opacity: 0.24; padding: 0; line-height: 1; transition: opacity 0.15s; color: #5dd4c8; }
+  .rp-eye:hover { opacity: 0.62; }
+
+  /* Password strength */
+  .rp-strength { margin-top: 7px; }
+  .rp-strength-track { height: 2px; background: rgba(94,212,204,0.1); border-radius: 99px; overflow: hidden; }
+  .rp-strength-fill { height: 100%; border-radius: 99px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1), background-color 0.4s; }
+  .rp-strength-label { font-family: 'DM Mono', monospace; font-size: 8px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; margin-top: 4px; }
+
+  /* Terms */
+  .rp-terms { display: flex; align-items: flex-start; gap: 9px; margin: 14px 0 18px; }
+  .rp-terms input[type="checkbox"] { width: 13px; height: 13px; margin-top: 2px; accent-color: #3bb8ad; cursor: pointer; flex-shrink: 0; }
+  .rp-terms label { font-size: 11px; font-weight: 300; color: rgba(140,185,183,0.42); line-height: 1.6; cursor: pointer; }
+  .rp-terms label a { color: #5dd4c8; font-weight: 500; text-decoration: none; }
+  .rp-terms label a:hover { text-decoration: underline; }
+
+  /* Button */
+  .rp-btn {
+    width: 100%; padding: 13px; border: none; border-radius: 10px;
+    background: #0c2e2b; border: 1px solid rgba(94,212,204,0.3);
+    color: #6de8df;
+    font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 500;
+    letter-spacing: 0.03em; cursor: pointer;
+    transition: background 0.22s, border-color 0.22s, transform 0.15s, box-shadow 0.22s;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+  }
+  .rp-btn:hover:not(:disabled) { background: #0e3834; border-color: rgba(94,212,204,0.48); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(59,184,173,0.16); }
+  .rp-btn:active:not(:disabled) { transform: none; }
+  .rp-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .rp-spinner { width: 13px; height: 13px; border: 1.5px solid rgba(94,212,204,0.22); border-top-color: #5dd4c8; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+  .rp-footer { margin-top: 18px; text-align: center; font-size: 12px; font-weight: 300; color: rgba(140,185,183,0.38); }
+  .rp-footer a { color: #5dd4c8; font-weight: 500; text-decoration: none; }
+  .rp-footer a:hover { color: #8ee8e2; }
+
+  .rp-strip { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 26px; padding-top: 16px; border-top: 1px solid rgba(94,212,204,0.07); }
+  .rp-strip-dash { width: 14px; height: 1px; background: rgba(94,212,204,0.15); }
+  .rp-strip-txt { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.16em; color: rgba(140,185,183,0.2); text-transform: uppercase; }
+
+  /* ── Right — Visual ── */
+  .rp-right {
+    position: relative;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 52px 56px; overflow: hidden;
+    background: #0d1425;
+  }
+
+  .rp-canvas { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .rp-blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.17; }
+  .rp-blob-1 { width: 480px; height: 480px; top: -100px; right: -100px; background: #0e7e72; animation: blobDrift 20s ease-in-out infinite; }
+  .rp-blob-2 { width: 300px; height: 300px; bottom: 20px; left: -60px; background: #1a9c8e; opacity: 0.12; animation: blobDrift 17s ease-in-out infinite reverse; }
+  .rp-blob-3 { width: 180px; height: 180px; top: 40%; right: 25%; background: #5dd4c8; opacity: 0.07; animation: blobDrift 13s ease-in-out infinite 2s; }
+  @keyframes blobDrift {
+    0%,100%{transform:translate(0,0);}
+    33%{transform:translate(-18px,22px);}
+    66%{transform:translate(14px,-16px);}
+  }
+
+  .rp-grid {
     position: absolute; inset: 0;
-    background: rgba(255,255,255,0.015);
-    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(94,212,204,0.11) 1px, transparent 1px);
+    background-size: 36px 36px; opacity: 0.55;
+  }
+  .rp-scan {
+    position: absolute; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(94,212,204,0.12) 40%, rgba(94,212,204,0.12) 60%, transparent);
+    top: 48%;
   }
 
-  /* lang */
-  .rx-lang { display: flex; gap: 6px; margin-bottom: 44px; }
-  .rx-lang-btn {
-    padding: 4px 11px; border-radius: 4px;
-    font-size: 10.5px; font-weight: 600; letter-spacing: 0.5px;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: transparent; color: rgba(255,255,255,0.3);
-    cursor: pointer; transition: all 0.18s;
-    font-family: 'Jost', sans-serif;
-  }
-  .rx-lang-btn:hover { border-color: rgba(99,102,241,0.4); color: rgba(129,140,248,0.8); }
-  .rx-lang-btn.on {
-    background: rgba(99,102,241,0.12);
-    border-color: rgba(99,102,241,0.45);
-    color: #818cf8;
+  .rp-right-inner {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; height: 100%; justify-content: space-between;
   }
 
-  .rx-form-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 600; font-size: 32px;
-    color: rgba(245,238,220,0.92);
-    letter-spacing: -0.3px; margin-bottom: 6px;
-  }
-  .rx-form-sub {
-    font-size: 13px; font-weight: 300;
-    color: rgba(245,238,220,0.3);
-    margin-bottom: 36px;
-  }
+  /* Visual header */
+  .rp-visual-head { animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:none;} }
 
-  /* two-col row */
-  .rx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .rp-visual-label {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: rgba(94,212,204,0.55); margin-bottom: 20px;
+  }
+  .rp-visual-line { width: 24px; height: 1px; background: rgba(94,212,204,0.35); }
 
-  /* underline input */
-  .rx-field { position: relative; margin-bottom: 28px; }
-  .rx-field.no-mb { margin-bottom: 0; }
-  .rx-field input {
-    width: 100%; padding: 10px 32px 10px 0;
-    background: transparent; border: none;
-    border-bottom: 1px solid rgba(255,255,255,0.12);
-    color: rgba(245,238,220,0.9);
-    font-size: 15px; font-family: 'Jost', sans-serif;
-    font-weight: 400; outline: none;
-    transition: border-color 0.2s;
-    caret-color: #C5A04C;
+  .rp-visual-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 48px; font-weight: 400; font-style: italic;
+    color: #ddeae9; line-height: 1.06; letter-spacing: -0.01em; margin-bottom: 18px;
   }
-  .rx-field input::placeholder { color: transparent; }
-  .rx-field input:focus { border-bottom-color: #6366f1; }
+  .rp-visual-title em {
+    font-style: normal; color: #5dd4c8;
+  }
+  .rp-visual-desc { font-size: 13px; font-weight: 300; color: rgba(180,210,208,0.5); line-height: 1.8; max-width: 290px; }
 
-  .rx-field label {
-    position: absolute; left: 0; top: 10px;
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: rgba(245,238,220,0.25);
-    pointer-events: none; transition: all 0.2s;
-  }
-  .rx-field input:focus + label,
-  .rx-field input:not(:placeholder-shown) + label {
-    top: -14px; font-size: 9.5px; letter-spacing: 2.5px;
-    color: #818cf8;
-  }
-
-  .rx-field::after {
-    content: '';
-    position: absolute; bottom: 0; left: 0;
-    width: 0; height: 1px;
-    background: linear-gradient(135deg, #6366f1, #818cf8);
-    transition: width 0.3s cubic-bezier(0.22,1,0.36,1);
-  }
-  .rx-field:focus-within::after { width: 100%; }
-
-  .rx-eye {
-    position: absolute; right: 0; top: 8px;
-    background: none; border: none; cursor: pointer;
-    font-size: 14px; color: rgba(245,238,220,0.22);
-    transition: color 0.18s;
-  }
-  .rx-eye:hover { color: rgba(245,238,220,0.55); }
-
-  /* strength */
-  .rx-strength { display: flex; gap: 5px; margin: -16px 0 24px; }
-  .rx-sb { height: 2px; flex: 1; border-radius: 1px; background: rgba(255,255,255,0.07); transition: background 0.3s; }
-
-  /* submit */
-  .rx-btn {
-    width: 100%; padding: 15px;
-    border: none;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #6366f1, #818cf8);
-    color: #fff;
-    font-family: 'Jost', sans-serif;
-    font-weight: 600; font-size: 12px;
-    letter-spacing: 3px; text-transform: uppercase;
-    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 14px rgba(99,102,241,0.3);
-    position: relative; overflow: hidden;
-    margin-top: 8px;
-  }
-  .rx-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(99,102,241,0.4);
-  }
-  .rx-btn:active:not(:disabled) { transform: translateY(0); }
-  .rx-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .rx-btn-inner { position: relative; z-index: 1; }
-
-  .rx-form-footer {
-    margin-top: 28px; text-align: center;
-    font-size: 12.5px; color: rgba(245,238,220,0.25);
-  }
-  .rx-form-footer a {
-    color: #818cf8; text-decoration: none; font-weight: 500;
-    transition: color 0.18s;
-  }
-  .rx-form-footer a:hover { color: #a5b4fc; }
-
-  @keyframes rx-spin { to { transform: rotate(360deg); } }
-  .rx-spinner {
-    display: inline-block; width: 12px; height: 12px;
-    border: 1.5px solid rgba(129,140,248,0.3);
-    border-top-color: #818cf8;
-    border-radius: 50%;
-    animation: rx-spin 0.7s linear infinite;
-    vertical-align: middle; margin-right: 8px;
-  }
-
-  /* ── RIGHT: editorial panel ── */
-  .rx-right {
-    flex: 1;
-    display: flex; flex-direction: column;
-    justify-content: space-between;
-    padding: 52px 72px 52px 64px;
-    position: relative; z-index: 1;
-  }
-
-  .rx-logo { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
-  .rx-logo-mark {
-    width: 36px; height: 36px;
-    border: 1px solid rgba(99,102,241,0.5);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; position: relative;
-  }
-  .rx-logo-mark::after {
-    content: ''; position: absolute; inset: 3px;
-    border-radius: 5px; background: rgba(99,102,241,0.08);
-  }
-  .rx-logo-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 600; font-size: 18px;
-    color: rgba(245,238,220,0.9); letter-spacing: 0.5px;
-  }
-
-  .rx-hero {}
-  .rx-hero-label {
-    font-size: 10px; font-weight: 600;
-    letter-spacing: 4px; text-transform: uppercase;
-    color: #818cf8;
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 24px; justify-content: flex-end;
-  }
-  .rx-hero-label::after {
-    content: ''; display: block; width: 32px; height: 1px; background: #818cf8;
-  }
-
-  .rx-hero-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
-    font-size: clamp(48px, 5.5vw, 80px);
-    line-height: 0.95;
-    color: rgba(245,238,220,0.92);
-    letter-spacing: -2px;
-    margin-bottom: 32px;
-    text-align: right;
-  }
-  .rx-hero-title em { font-style: italic; color: #818cf8; font-weight: 300; }
-  .rx-hero-title strong { font-weight: 700; display: block; }
-
-  .rx-hero-desc {
-    font-size: 14px; font-weight: 300;
-    color: rgba(245,238,220,0.32);
-    line-height: 1.8; max-width: 300px;
-    text-align: right; margin-left: auto;
-  }
-
-  /* feature pills */
-  .rx-features { display: flex; flex-direction: column; gap: 14px; align-items: flex-end; }
-  .rx-feature {
+  /* Benefit cards */
+  .rp-benefits { display: flex; flex-direction: column; gap: 10px; animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) 0.35s both; }
+  .rp-benefit {
+    background: rgba(94,212,204,0.04);
+    border: 1px solid rgba(94,212,204,0.1);
+    border-radius: 12px; padding: 13px 15px;
     display: flex; align-items: center; gap: 12px;
+    transition: background 0.22s, border-color 0.22s;
   }
-  .rx-feature-icon {
-    width: 28px; height: 28px;
-    border: 1px solid rgba(99,102,241,0.2);
-    border-radius: 50%;
+  .rp-benefit:hover { background: rgba(94,212,204,0.07); border-color: rgba(94,212,204,0.18); }
+  .rp-benefit-icon {
+    width: 34px; height: 34px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 12px;
-    background: rgba(99,102,241,0.07);
+    font-size: 14px; flex-shrink: 0;
   }
-  .rx-feature-txt {
-    font-size: 12.5px; font-weight: 400;
-    color: rgba(245,238,220,0.32);
-  }
+  .rp-benefit-title { font-size: 12px; font-weight: 500; color: #b8d8d6; margin-bottom: 1px; }
+  .rp-benefit-sub { font-size: 11px; font-weight: 300; color: rgba(140,185,183,0.45); }
 
-  .rx-right-footer {
-    display: flex; align-items: center; gap: 8px; justify-content: flex-end;
-    font-size: 11px; color: rgba(245,238,220,0.18);
+  /* Trust row */
+  .rp-trust { animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+  .rp-trust-label { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(140,185,183,0.28); margin-bottom: 10px; }
+  .rp-avatars { display: flex; align-items: center; }
+  .rp-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid rgba(94,212,204,0.12);
+    background: rgba(94,212,204,0.06);
+    font-size: 11px; display: flex; align-items: center; justify-content: center;
   }
-  .rx-right-footer span { color: rgba(245,238,220,0.1); }
+  .rp-avatar + .rp-avatar { margin-left: -6px; }
+  .rp-trust-count { font-size: 11px; font-weight: 300; color: rgba(140,185,183,0.4); margin-left: 10px; }
+  .rp-trust-count strong { font-weight: 500; color: rgba(180,210,208,0.65); }
 
-  @media (max-width: 960px) {
-    .rx-root { flex-direction: column-reverse; }
-    .rx-left { width: 100%; min-height: auto; padding: 40px 32px 52px; border-right: none; border-top: 1px solid rgba(255,255,255,0.04); }
-    .rx-right { padding: 44px 32px 40px; }
-    .rx-hero-title, .rx-hero-desc, .rx-hero-label, .rx-features { text-align: left; justify-content: flex-start; margin-left: 0; }
-    .rx-hero-label { justify-content: flex-start; }
-    .rx-hero-label::after { display: none; }
-    .rx-hero-label::before { content: ''; display: block; width: 32px; height: 1px; background: #818cf8; }
-    .rx-logo { justify-content: flex-start; }
-    .rx-features { align-items: flex-start; }
-    .rx-row { grid-template-columns: 1fr; gap: 0; }
-    .rx-row .rx-field.no-mb { margin-bottom: 28px; }
+  /* ── Light Mode ── */
+  .rp.light { background: #f0fafa; color: #1a3535; }
+  .rp.light .rp-left { background: #f8fffe; }
+  .rp.light .rp-left::after { background: linear-gradient(180deg, transparent 8%, rgba(13,110,100,0.12) 35%, rgba(13,110,100,0.12) 65%, transparent 92%); }
+  .rp.light .rp-brand-mark { background: #d0f0ed; border-color: rgba(13,110,100,0.25); }
+  .rp.light .rp-brand-name { color: #0a2a28; }
+  .rp.light .rp-brand-tag { color: rgba(13,110,100,0.5); }
+  .rp.light .rp-form-tag { color: rgba(13,110,100,0.7); }
+  .rp.light .rp-tag-dot { background: linear-gradient(135deg, #0b8f85, #1abfb3); box-shadow: 0 0 0 2px rgba(11,143,133,0.15); }
+  .rp.light .rp-form-title { color: #0d2e2c; }
+  .rp.light .rp-form-title em { color: #0b8f85; }
+  .rp.light .rp-form-sub { color: rgba(30,70,68,0.5); }
+  .rp.light .rp-hr { background: linear-gradient(90deg, transparent, rgba(13,110,100,0.1) 30%, rgba(13,110,100,0.1) 70%, transparent); }
+  .rp.light .rp-field-label { color: rgba(30,70,68,0.45); }
+  .rp.light .rp-input-row input { background: rgba(255,255,255,0.85); border-color: rgba(13,110,100,0.17); color: #0d2e2c; }
+  .rp.light .rp-input-row input::placeholder { color: rgba(30,70,68,0.3); }
+  .rp.light .rp-input-row input:focus { border-color: rgba(13,110,100,0.4); background: #fff; box-shadow: 0 0 0 3px rgba(13,110,100,0.07); }
+  .rp.light .rp-terms label { color: rgba(30,70,68,0.5); }
+  .rp.light .rp-terms label a { color: #0b8f85; }
+  .rp.light .rp-btn { background: #d2f0ec; border-color: rgba(13,110,100,0.38); color: #0a5550; }
+  .rp.light .rp-btn:hover:not(:disabled) { background: #bce8e3; box-shadow: 0 6px 24px rgba(13,110,100,0.14); }
+  .rp.light .rp-footer { color: rgba(30,70,68,0.42); }
+  .rp.light .rp-footer a { color: #0b8f85; }
+  .rp.light .rp-strip { border-color: rgba(13,110,100,0.1); }
+  .rp.light .rp-strip-txt { color: rgba(30,70,68,0.28); }
+  .rp.light .rp-strip-dash { background: rgba(13,110,100,0.2); }
+  .rp.light .rp-ctl-btn { border-color: rgba(13,110,100,0.17); background: rgba(13,110,100,0.04); color: rgba(30,70,68,0.5); }
+  .rp.light .rp-ctl-btn:hover, .rp.light .rp-ctl-btn.on { border-color: rgba(13,110,100,0.38); color: #0b8f85; background: rgba(13,110,100,0.08); }
+  .rp.light .rp-ctl-icon { border-color: rgba(13,110,100,0.17); background: rgba(13,110,100,0.04); }
+  .rp.light .rp-right { background: #e6f7f5; }
+  .rp.light .rp-blob-1 { opacity: 0.2; background: #2abfb3; }
+  .rp.light .rp-blob-2 { opacity: 0.13; background: #0e9e92; }
+  .rp.light .rp-grid { opacity: 0.3; background-image: radial-gradient(circle, rgba(13,110,100,0.14) 1px, transparent 1px); }
+  .rp.light .rp-visual-label { color: rgba(13,110,100,0.6); }
+  .rp.light .rp-visual-line { background: rgba(13,110,100,0.35); }
+  .rp.light .rp-visual-title { color: #0d2e2c; }
+  .rp.light .rp-visual-title em { color: #0b8f85; }
+  .rp.light .rp-visual-desc { color: rgba(30,70,68,0.52); }
+  .rp.light .rp-benefit { background: rgba(13,110,100,0.04); border-color: rgba(13,110,100,0.12); }
+  .rp.light .rp-benefit:hover { background: rgba(13,110,100,0.07); border-color: rgba(13,110,100,0.2); }
+  .rp.light .rp-benefit-title { color: #1a4542; }
+  .rp.light .rp-benefit-sub { color: rgba(30,70,68,0.45); }
+  .rp.light .rp-trust-label { color: rgba(30,70,68,0.3); }
+  .rp.light .rp-trust-count { color: rgba(30,70,68,0.42); }
+  .rp.light .rp-trust-count strong { color: rgba(0,60,56,0.68); }
+  .rp.light .rp-avatar { background: rgba(13,110,100,0.08); border-color: rgba(13,110,100,0.14); }
+
+  /* Responsive */
+  @media (max-width: 860px) {
+    .rp { grid-template-columns: 1fr; }
+    .rp-right { display: none; }
+    .rp-left { min-height: 100vh; padding: 36px 24px; }
+    .rp-left::after { display: none; }
+    .rp-controls { top: 18px; left: 18px; }
+  }
+  @media (max-width: 480px) {
+    .rp-left { padding: 28px 18px; }
+    .rp-form-title { font-size: 26px; }
   }
 `;
 
 function getStrength(pw) {
-  let s = 0;
-  if (pw.length >= 4) s = 1;
-  if (pw.length >= 6) s = 2;
-  if (pw.length >= 8 && /[A-Z]/.test(pw)) s = 3;
-  if (s >= 3 && /[0-9!@#$%]/.test(pw)) s = 4;
-  return s;
+  if (!pw) return { pct: 0, label: "", color: "transparent" };
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    { pct: 25, label: "WEAK", color: "#e05252" },
+    { pct: 50, label: "FAIR", color: "#d4914d" },
+    { pct: 75, label: "GOOD", color: "#4da8d4" },
+    { pct: 100, label: "STRONG", color: "#3bb8ad" },
+  ];
+  return levels[score - 1] || { pct: 0, label: "", color: "transparent" };
 }
 
 export default function RegisterPage() {
@@ -300,26 +353,29 @@ export default function RegisterPage() {
   });
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [banner, setBanner] = useState(null);
+  const [dark, setDark] = useState(
+    () => !document.documentElement.classList.contains("light"),
+  );
   const kh = language === "kh";
+  const strength = getStrength(form.password);
 
-  const s = getStrength(form.password);
-  const sbColor = s <= 1 ? "#b45c5c" : s <= 2 ? "#b8963c" : "#C5A04C";
-
-  const features = kh
-    ? [
-        ["📊", "ការវិភាគចំណាយភ្លាមៗ"],
-        ["🎯", "គ្រប់គ្រងថវិការប្រចាំខែ"],
-        ["🔒", "ទិន្នន័យរបស់អ្នកត្រូវបានការពារ"],
-      ]
-    : [
-        ["📊", "Real-time spending analytics"],
-        ["🎯", "Monthly budget management"],
-        ["🔒", "Your data, always encrypted"],
-      ];
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    if (dark) {
+      root.classList.add("light");
+      root.classList.remove("dark");
+      setDark(false);
+    } else {
+      root.classList.remove("light");
+      root.classList.add("dark");
+      setDark(true);
+    }
+  };
 
   const handleSubmit = async () => {
-    if (!form.name || !form.email || !form.password) {
+    if (!form.name || !form.email || !form.password || !form.confirm) {
       setBanner({
         type: "error",
         title: kh ? "សូមបំពេញព័ត៌មានទាំងអស់" : "Please fill in all fields",
@@ -333,12 +389,10 @@ export default function RegisterPage() {
       });
       return;
     }
-    if (form.password.length < 6) {
+    if (!agreed) {
       setBanner({
         type: "error",
-        title: kh
-          ? "ពាក្យសម្ងាត់ត្រូវតែមាន ៦ តួឬច្រើន"
-          : "Password must be at least 6 characters",
+        title: kh ? "សូមយល់ព្រមលើលក្ខខណ្ឌ" : "Please agree to the terms",
       });
       return;
     }
@@ -350,198 +404,358 @@ export default function RegisterPage() {
       setBanner({
         type: "error",
         title:
-          err.message || (kh ? "ការចុះឈ្មោះបរាជ័យ" : "Registration failed"),
+          err.message || (kh ? "ការចុះឈ្មោះបានបរាជ័យ" : "Registration failed"),
       });
     } finally {
       setLoading(false);
     }
   };
 
+  const benefits = kh
+    ? [
+        {
+          icon: "📊",
+          bg: "rgba(59,184,173,0.1)",
+          title: "តាមដានចំណាយ",
+          sub: "ដឹងថាលុយទៅណា",
+        },
+        {
+          icon: "🎯",
+          bg: "rgba(77,168,212,0.1)",
+          title: "ផែនការហិរញ្ញវត្ថុ",
+          sub: "ធ្វើឱ្យគោលដៅជាក់ស្ដែង",
+        },
+        {
+          icon: "🔒",
+          bg: "rgba(94,212,204,0.08)",
+          title: "ទិន្នន័យមានសុវត្ថិភាព",
+          sub: "ការអ៊ិនគ្រីបពេញលេញ",
+        },
+      ]
+    : [
+        {
+          icon: "📊",
+          bg: "rgba(59,184,173,0.1)",
+          title: "Smart Tracking",
+          sub: "Know where every dollar goes",
+        },
+        {
+          icon: "🎯",
+          bg: "rgba(77,168,212,0.1)",
+          title: "Goal Budgeting",
+          sub: "Financial dreams made real",
+        },
+        {
+          icon: "🔒",
+          bg: "rgba(94,212,204,0.08)",
+          title: "Bank-grade Security",
+          sub: "Always encrypted, always yours",
+        },
+      ];
+
   return (
     <>
       <style>{css}</style>
-      <div className="rx-root">
-        <div className="rx-bg" />
-        <div className="rx-lines" />
-
-        {/* ── LEFT: FORM ── */}
-        <div className="rx-left">
-          <div className="rx-lang">
+      <div className={`rp${dark ? "" : " light"}`}>
+        {/* LEFT FORM */}
+        <div className="rp-left">
+          <div className="rp-controls">
             {[
               ["en", "EN"],
               ["kh", "ខ្មែរ"],
             ].map(([c, l]) => (
               <button
                 key={c}
-                className={`rx-lang-btn${language === c ? " on" : ""}`}
+                className={`rp-ctl-btn${language === c ? " on" : ""}`}
                 onClick={() => setLanguage(c)}
               >
                 {l}
               </button>
             ))}
+            <div className="rp-ctl-icon" onClick={toggleTheme}>
+              {dark ? "☀️" : "🌙"}
+            </div>
           </div>
 
-          <div className="rx-form-title">
-            {kh ? "បង្កើតគណនី" : "Create account"}
-          </div>
-          <p className="rx-form-sub">
-            {kh
-              ? "ចាប់ផ្ដើមតាមដានប្រាក់របស់អ្នកថ្ងៃនេះ"
-              : "Begin your journey to financial clarity"}
-          </p>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSubmit();
-            }}
-          >
-            <div className="rx-row" style={{ marginBottom: 28 }}>
-              <div className="rx-field no-mb">
-                <input
-                  type="text"
-                  id="rx-name"
-                  placeholder="n"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, name: e.target.value }))
-                  }
-                />
-                <label htmlFor="rx-name">{kh ? "ឈ្មោះ" : "Full name"}</label>
-              </div>
-              <div className="rx-field no-mb">
-                <input
-                  type="email"
-                  id="rx-email"
-                  placeholder="e"
-                  value={form.email}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, email: e.target.value }))
-                  }
-                />
-                <label htmlFor="rx-email">{kh ? "អ៊ីម៉ែល" : "Email"}</label>
+          <div className="rp-form-wrap">
+            <div className="rp-brand">
+              <div className="rp-brand-mark">💰</div>
+              <div>
+                <span className="rp-brand-name">MoneyTrack</span>
+                <span className="rp-brand-tag">Personal Finance</span>
               </div>
             </div>
 
-            <div className="rx-field">
-              <input
-                type={showPass ? "text" : "password"}
-                id="rx-pass"
-                placeholder="p"
-                value={form.password}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, password: e.target.value }))
-                }
-              />
-              <label htmlFor="rx-pass">
-                {kh ? "ពាក្យសម្ងាត់" : "Password"}
-              </label>
-              <button
-                type="button"
-                className="rx-eye"
-                onClick={() => setShowPass((v) => !v)}
-              >
-                {showPass ? "🙈" : "👁️"}
-              </button>
+            <div className="rp-form-tag">
+              <span className="rp-tag-dot" />
+              {kh ? "ចុះឈ្មោះ" : "Create account"}
             </div>
-
-            {form.password && (
-              <div className="rx-strength">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="rx-sb"
-                    style={{ background: i <= s ? sbColor : "" }}
-                  />
-                ))}
-              </div>
-            )}
-
-            <div className="rx-field">
-              <input
-                type={showPass ? "text" : "password"}
-                id="rx-conf"
-                placeholder="c"
-                value={form.confirm}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, confirm: e.target.value }))
-                }
-              />
-              <label htmlFor="rx-conf">
-                {kh ? "បញ្ជាក់ពាក្យសម្ងាត់" : "Confirm password"}
-              </label>
-            </div>
-
-            <button type="submit" className="rx-btn" disabled={loading}>
-              <span className="rx-btn-inner">
-                {loading ? (
-                  <>
-                    <span className="rx-spinner" />
-                    {kh ? "កំពុងចុះឈ្មោះ..." : "Creating account..."}
-                  </>
-                ) : kh ? (
-                  "ចុះឈ្មោះ"
-                ) : (
-                  "Create account"
-                )}
-              </span>
-            </button>
-          </form>
-
-          <div className="rx-form-footer">
-            {kh ? "មានគណនីហើយ?" : "Already have an account?"}{" "}
-            <Link to="/login">{kh ? "ចូលប្រើប្រាស់" : "Sign in"}</Link>
-          </div>
-        </div>
-
-        {/* ── RIGHT: EDITORIAL ── */}
-        <div className="rx-right">
-          <div className="rx-logo">
-            <span className="rx-logo-name">MoneyTrack</span>
-            <div className="rx-logo-mark">💰</div>
-          </div>
-
-          <div className="rx-hero">
-            <div className="rx-hero-label">
-              {kh ? "ហិរញ្ញវត្ថុ" : "Personal Finance"}
-            </div>
-            <h1 className="rx-hero-title">
+            <h1 className="rp-form-title">
               {kh ? (
                 <>
-                  <em>ចាប់ផ្ដើម</em>
+                  ចាប់ផ្ដើម
                   <br />
-                  <strong>ថ្ងៃនេះ</strong>
+                  <em>ការធ្វើដំណើរ</em>
                 </>
               ) : (
                 <>
-                  <em>Begin</em>
+                  Start your
                   <br />
-                  <strong>today.</strong>
+                  <em>journey.</em>
                 </>
               )}
             </h1>
-            <p className="rx-hero-desc">
+            <p className="rp-form-sub">
               {kh
-                ? "ទីកន្លែងតែមួយគត់ដើម្បីតាមដានចំណូល និងចំណាយរបស់អ្នក"
-                : "Your personal space to track income, expenses, and stay on top of every dollar."}
+                ? "បង្កើតគណនីឥតគិតថ្លៃ ហើយចាប់ផ្ដើមតាមដានហិរញ្ញវត្ថុ"
+                : "Join thousands managing their finances smarter."}
             </p>
-          </div>
 
-          <div className="rx-features">
-            {features.map(([icon, txt]) => (
-              <div className="rx-feature" key={txt}>
-                <span className="rx-feature-txt">{txt}</span>
-                <div className="rx-feature-icon">{icon}</div>
+            <div className="rp-hr" />
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+            >
+              <div className="rp-field">
+                <label className="rp-field-label">
+                  {kh ? "ឈ្មោះ" : "Full name"}
+                </label>
+                <div className="rp-input-row">
+                  <span className="rp-ico">👤</span>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, name: e.target.value }))
+                    }
+                    placeholder={kh ? "ឈ្មោះពេញ" : "Your full name"}
+                    autoComplete="name"
+                  />
+                </div>
               </div>
-            ))}
+
+              <div className="rp-field">
+                <label className="rp-field-label">
+                  {kh ? "អ៊ីម៉ែល" : "Email address"}
+                </label>
+                <div className="rp-input-row">
+                  <span className="rp-ico">✉️</span>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, email: e.target.value }))
+                    }
+                    placeholder={kh ? "អ្នក@gmail.com" : "you@example.com"}
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
+
+              <div className="rp-field">
+                <label className="rp-field-label">
+                  {kh ? "ពាក្យសម្ងាត់" : "Password"}
+                </label>
+                <div className="rp-input-row">
+                  <span className="rp-ico">🔑</span>
+                  <input
+                    type={showPass ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, password: e.target.value }))
+                    }
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className="rp-eye"
+                    onClick={() => setShowPass((v) => !v)}
+                  >
+                    {showPass ? "🙈" : "👁️"}
+                  </button>
+                </div>
+                {form.password && (
+                  <div className="rp-strength">
+                    <div className="rp-strength-track">
+                      <div
+                        className="rp-strength-fill"
+                        style={{
+                          width: strength.pct + "%",
+                          backgroundColor: strength.color,
+                        }}
+                      />
+                    </div>
+                    <div
+                      className="rp-strength-label"
+                      style={{ color: strength.color }}
+                    >
+                      {strength.label}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="rp-field">
+                <label className="rp-field-label">
+                  {kh ? "បញ្ជាក់ពាក្យសម្ងាត់" : "Confirm password"}
+                </label>
+                <div className="rp-input-row">
+                  <span className="rp-ico">🔒</span>
+                  <input
+                    type={showPass ? "text" : "password"}
+                    value={form.confirm}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, confirm: e.target.value }))
+                    }
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    style={
+                      form.confirm && form.confirm !== form.password
+                        ? {
+                            borderColor: "rgba(224,82,82,0.45)",
+                            boxShadow: "0 0 0 3px rgba(224,82,82,0.08)",
+                          }
+                        : form.confirm && form.confirm === form.password
+                          ? {
+                              borderColor: "rgba(59,184,173,0.45)",
+                              boxShadow: "0 0 0 3px rgba(59,184,173,0.08)",
+                            }
+                          : {}
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="rp-terms">
+                <input
+                  type="checkbox"
+                  id="rp-terms"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                />
+                <label htmlFor="rp-terms">
+                  {kh ? (
+                    <>
+                      ខ្ញុំយល់ព្រមនឹង <a href="#">លក្ខខណ្ឌ</a> និង{" "}
+                      <a href="#">គោលការណ៍ឯកជនភាព</a>
+                    </>
+                  ) : (
+                    <>
+                      I agree to the <a href="#">Terms of Service</a> and{" "}
+                      <a href="#">Privacy Policy</a>
+                    </>
+                  )}
+                </label>
+              </div>
+
+              <button type="submit" className="rp-btn" disabled={loading}>
+                {loading ? (
+                  <>
+                    <span className="rp-spinner" />
+                    {kh ? "កំពុងបង្កើត..." : "Creating account..."}
+                  </>
+                ) : kh ? (
+                  "បង្កើតគណនី →"
+                ) : (
+                  "Create account →"
+                )}
+              </button>
+            </form>
+
+            <div className="rp-footer">
+              {kh ? "មានគណនីហើយ?" : "Already have an account?"}{" "}
+              <Link to="/login">{kh ? "ចូលប្រើប្រាស់" : "Sign in"}</Link>
+            </div>
+
+            <div className="rp-strip">
+              <div className="rp-strip-dash" />
+              <span className="rp-strip-txt">MoneyTrack · v2.0 · 2025</span>
+              <div className="rp-strip-dash" />
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT VISUAL */}
+        <div className="rp-right">
+          <div className="rp-canvas">
+            <div className="rp-blob rp-blob-1" />
+            <div className="rp-blob rp-blob-2" />
+            <div className="rp-blob rp-blob-3" />
+            <div className="rp-grid" />
+            <div className="rp-scan" />
           </div>
 
-          <div className="rx-right-footer">
-            <span>© 2025 MoneyTrack</span>
-            <span>·</span>
-            <span>Privacy</span>
-            <span>·</span>
-            <span>Terms</span>
+          <div className="rp-right-inner">
+            <div className="rp-visual-head">
+              <div className="rp-visual-label">
+                <div className="rp-visual-line" />
+                {kh ? "ហេតុអ្វីត្រូវចូលរួម" : "Why join us"}
+              </div>
+              <h2 className="rp-visual-title">
+                {kh ? (
+                  <>
+                    ជីវិត
+                    <br />
+                    <em>ហិរញ្ញវត្ថុ</em>
+                    <br />
+                    ល្អប្រសើរ
+                  </>
+                ) : (
+                  <>
+                    A better
+                    <br />
+                    <em>financial</em>
+                    <br />
+                    future.
+                  </>
+                )}
+              </h2>
+              <p className="rp-visual-desc">
+                {kh
+                  ? "ចូលរួមជាមួយអ្នកប្រើជាង ១០,០០០ នាក់ ដែលស្គាល់ហិរញ្ញវត្ថុប្រចាំថ្ងៃ"
+                  : "Join over 10,000 people who've taken calm control of their finances."}
+              </p>
+            </div>
+
+            <div className="rp-benefits">
+              {benefits.map((b) => (
+                <div className="rp-benefit" key={b.title}>
+                  <div className="rp-benefit-icon" style={{ background: b.bg }}>
+                    {b.icon}
+                  </div>
+                  <div>
+                    <div className="rp-benefit-title">{b.title}</div>
+                    <div className="rp-benefit-sub">{b.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="rp-trust">
+              <div className="rp-trust-label">
+                {kh ? "ជឿទុកចិត្តដោយ" : "Trusted by"}
+              </div>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div className="rp-avatars">
+                  {["😊", "🙂", "😄", "🤩", "😎"].map((e, i) => (
+                    <div
+                      className="rp-avatar"
+                      key={i}
+                      style={{ zIndex: 5 - i }}
+                    >
+                      {e}
+                    </div>
+                  ))}
+                </div>
+                <span className="rp-trust-count">
+                  <strong>10,000+</strong> {kh ? "អ្នកប្រើ" : "happy users"}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
